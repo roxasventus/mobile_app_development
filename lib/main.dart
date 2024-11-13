@@ -1,17 +1,29 @@
+import 'package:app_project/FeedBackPage.dart';
+import 'package:app_project/Filemanagement.dart';
+import 'package:app_project/SideMenu.dart';
+import 'package:app_project/WeekPage.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
-
+import 'AddPage.dart';
+import 'DatePage.dart';
+import 'Tasks.dart';
 // 할 일 목록
+/*
 final Map<DateTime, List<String>> _tasks = {
   //DateTime(2024, 11, 17): ['Task 1', 'Task 2', 'Task 3'],
   //DateTime(2024, 11, 18): ['Task 4', 'Task 5'],
 };
-
-//tmpp 테스트
+*/
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider<Tasks>(
+      create: (_) => Tasks(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -32,6 +44,9 @@ class MyApp extends StatelessWidget {
         '/': (context) => const MyHomePage(),
         '/Today': (context) => const DatePage(),
         '/Today/Add': (context) => const AddPage(),
+        '/FeedBack': (context) => const FeedBackPage(),
+        '/File': (context) => const Filemanagement(),
+        '/Week': (context) => const WeekPage(),
       },
     );
   }
@@ -60,18 +75,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
 
         title: Text('오늘의 할 일 리스트'),
-        leading: IconButton(
-          icon: Icon(Icons.menu), // 햄버거버튼 아이콘 생성
-          onPressed: () {
-            // 아이콘 버튼 실행
-            print('menu button is clicked');
-          },
+        leading: Builder(
+            builder: (context){
+              return IconButton(
+                icon: Icon(Icons.menu), // 햄버거버튼 아이콘 생성
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              );
+            }
         ),
       ),
+      drawer: SideMenu(),
       body: Center(
 
         child: Column(
@@ -102,6 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
 // DatePage //////////////////////////////////////
+/*
 class DatePage extends StatefulWidget {
   const DatePage({super.key});
 
@@ -270,8 +289,9 @@ class _DatePageState extends State<DatePage> {
     );
   }
 }
-
+*/
 // AddPage //////////////////////////////////////
+/*
 class AddPage extends StatefulWidget {
   const AddPage({super.key});
 
@@ -340,8 +360,9 @@ class _AddPageState extends State<AddPage> {
     );
   }
 }
+ */
 ////////////////////////////////////////////////////
-
+/*
 class MyForm extends StatefulWidget {
   final Function(Task) onSubmit;
   final DateTime date;
@@ -441,7 +462,7 @@ class _MyFormState extends State<MyForm> {
     );
   }
 }
-
+*/
 
 
 class ReorderableTaskList extends StatefulWidget {
