@@ -1,3 +1,4 @@
+import 'package:app_project/SideMenu.dart';
 import 'package:flutter/material.dart';
 import 'main.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -33,9 +34,15 @@ class _WeekPageState extends State<WeekPage> {
             .colorScheme
             .inversePrimary,
         title: Text('기간별 할 일 리스트'),
-        leading: IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.menu),
+        leading: Builder(
+            builder: (context) {
+              return IconButton(
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+                icon: Icon(Icons.menu),
+              );
+            }
         ),
         actions: [
           IconButton(
@@ -44,6 +51,7 @@ class _WeekPageState extends State<WeekPage> {
           ),
         ],
       ),
+      drawer: SideMenu(),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[

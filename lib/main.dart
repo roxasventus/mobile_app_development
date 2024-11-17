@@ -1,5 +1,5 @@
 import 'package:app_project/FeedBackPage.dart';
-import 'package:app_project/Filemanagement.dart';
+import 'package:app_project/FileManagement.dart';
 import 'package:app_project/SideMenu.dart';
 import 'package:app_project/WeekPage.dart';
 import 'package:flutter/material.dart';
@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
         '/Today': (context) => const DatePage(),
         '/Today/Add': (context) => const AddPage(),
         '/FeedBack': (context) => const FeedBackPage(),
-        '/File': (context) => const Filemanagement(),
+        '/File': (context) => const FileManagement(),
         '/Week': (context) => const WeekPage(),
       },
     );

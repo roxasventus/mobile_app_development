@@ -1,3 +1,4 @@
+import 'package:app_project/SideMenu.dart';
 import 'package:flutter/material.dart';
 import 'main.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -33,9 +34,15 @@ class _FeedBackPageState extends State<FeedBackPage> {
             .colorScheme
             .inversePrimary,
         title: Text('날짜 단위 피드백'),
-        leading: IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.menu),
+        leading: Builder(
+            builder: (context) {
+              return IconButton(
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+                icon: Icon(Icons.menu),
+              );
+            }
         ),
         actions: [
           IconButton(
@@ -44,6 +51,7 @@ class _FeedBackPageState extends State<FeedBackPage> {
           ),
         ],
       ),
+      drawer: SideMenu(),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
