@@ -1,3 +1,4 @@
+import 'package:app_project/SideMenu.dart';
 import 'package:flutter/material.dart';
 import 'main.dart';
 
@@ -23,9 +24,15 @@ class _FilemanagementState extends State<Filemanagement> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text('자료 관리'),
-        leading: IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.menu),
+        leading: Builder(
+            builder: (context) {
+              return IconButton(
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+                icon: Icon(Icons.menu),
+              );
+            }
         ),
         actions: [
           IconButton(
@@ -34,6 +41,7 @@ class _FilemanagementState extends State<Filemanagement> {
           ),
         ],
       ),
+      drawer: SideMenu(),
       body: Column(
         children: [
           // 텍스트 리스트
