@@ -98,63 +98,76 @@ class _DatePageState extends State<DatePage> {
       ),
       builder: (context) {
         final tasks = Provider.of<Tasks>(context).getTasks(selectedDay) ?? [];
+        final Map<String, bool> taskCompletion = {
+          for (var task in tasks) task: false,
+        };
 
-        return Container(
-          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: EdgeInsets.only(bottom: 16.0),
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(2.0),
-                ),
-              ),
-              Text(
-                DateFormat('MMM d, yyyy').format(selectedDay),
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 16.0),
-              ...tasks.map((task) => ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.purple.shade100,
-                  child: Icon(Icons.task, color: Colors.purple),
-                ),
-                title: Text(task),
-                trailing: Checkbox(
-                  value: false,
-                  onChanged: (bool? value) {},
-                ),
-              )),
-              if (tasks.isEmpty)
-                Text('할 일이 없습니다.', style: TextStyle(color: Colors.grey)),
-              SizedBox(height: 16.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  FloatingActionButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/Today/Add', arguments: selectedDay);
-                    },
-                    child: const Icon(Icons.edit),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: EdgeInsets.only(bottom: 16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius: BorderRadius.circular(2.0),
+                    ),
                   ),
-                  SizedBox(width: 100.0),
-                  FloatingActionButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pop(context);
-                    },
-                    child: const Icon(Icons.format_list_bulleted),
+                  Text(
+                    DateFormat('MMM d, yyyy').format(selectedDay),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 16.0),
+                  ...tasks.map((task) {
+                    return CheckboxListTile(
+                      value: taskCompletion[task],
+                      onChanged: (bool? value) {
+                        setState(() {
+                          taskCompletion[task] = value ?? false;
+                        });
+                      },
+                      title: Text(task),
+                      secondary: CircleAvatar(
+                        backgroundColor: Colors.purple.shade100,
+                        child: Icon(Icons.task, color: Colors.purple),
+                      ),
+                    );
+                  }),
+                  if (tasks.isEmpty)
+                    Text('할 일이 없습니다.', style: TextStyle(color: Colors.grey)),
+                  SizedBox(height: 16.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      FloatingActionButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/Today/Add', arguments: selectedDay);
+                        },
+                        child: const Icon(Icons.edit),
+                      ),
+                      SizedBox(width: 100.0),
+                      FloatingActionButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                        },
+                        child: const Icon(Icons.format_list_bulleted),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
+
+
 }

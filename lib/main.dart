@@ -9,6 +9,9 @@ import 'package:intl/intl.dart';
 import 'AddPage.dart';
 import 'DatePage.dart';
 import 'Tasks.dart';
+import 'package:intl/date_symbol_data_local.dart';
+
+import 'TodayPage.dart';
 // 할 일 목록
 /*
 final Map<DateTime, List<String>> _tasks = {
@@ -17,7 +20,9 @@ final Map<DateTime, List<String>> _tasks = {
 };
 */
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('ko');
   runApp(
     ChangeNotifierProvider<Tasks>(
       create: (_) => Tasks(),

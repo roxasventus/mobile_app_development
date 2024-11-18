@@ -27,24 +27,28 @@ class SideMenu extends StatelessWidget {
           ListTile(
             title: const Text('날짜별 할 일'),
             onTap: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
               Navigator.pushNamed(context, '/Today');
             },
           ),
           ListTile(
             title: const Text('기간별 할 일'),
             onTap: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
               Navigator.pushNamed(context, '/Week');
             },
           ),
           ListTile(
             title: const Text('피드백'),
             onTap: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
               Navigator.pushNamed(context, '/FeedBack');
             },
           ),
           ListTile(
             title: const Text('공부 자료 관리'),
             onTap: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
               Navigator.pushNamed(context, '/File');
             },
           ),

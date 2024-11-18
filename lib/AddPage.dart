@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'SideMenu.dart';
 import 'Tasks.dart';
 
 class AddPage extends StatefulWidget {
@@ -27,7 +28,18 @@ class _AddPageState extends State<AddPage> {
               Tab(text: '과거기록'),
             ],
           ),
+          leading: Builder(
+              builder: (context){
+                return IconButton(
+                  icon: Icon(Icons.menu), // 햄버거버튼 아이콘 생성
+                  onPressed: () {
+                    Scaffold.of(context).openDrawer();
+                  },
+                );
+              }
+          ),
         ),
+        drawer: SideMenu(),
         body: TabBarView(
           children: [
             Column(
@@ -59,7 +71,31 @@ class _AddPageState extends State<AddPage> {
               ],
             ),
             Center(child: Text('미완성')),
-            Center(child: Text('과거기록')),
+            Column(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Consumer<Tasks>(
+                    builder: (context, tasksProvider, _) {
+                      return ReorderableTaskList(tasks: tasksProvider.pasttaskList, date: date);
+                    },
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 20.0, bottom: 20.0),
+                    child: FloatingActionButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.pop(context);
+                      },
+                      child: const Icon(Icons.arrow_back),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -122,6 +158,7 @@ class _MyFormState extends State<MyForm> {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
                     Provider.of<Tasks>(context, listen: false).addToTaskList(taskName);
+                    Provider.of<Tasks>(context, listen: false).addToPastTaskList(taskName);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Task added to list!')),
                     );
