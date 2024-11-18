@@ -25,6 +25,13 @@ class SideMenu extends StatelessWidget {
             ),
           ),
           ListTile(
+            title: const Text('오늘의 할 일 리스트'),
+            onTap: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              Navigator.pushNamed(context, '/');
+            },
+          ),
+          ListTile(
             title: const Text('날짜별 할 일'),
             onTap: () {
               Navigator.of(context).popUntil((route) => route.isFirst);

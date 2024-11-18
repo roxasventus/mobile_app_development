@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:intl/date_symbol_data_local.dart';
+import 'package:provider/provider.dart';
+
+import 'SideMenu.dart';
+import 'Tasks.dart';
 
 class TodayPage extends StatefulWidget {
   const TodayPage({Key? key}) : super(key: key);
@@ -10,104 +13,186 @@ class TodayPage extends StatefulWidget {
 }
 
 class _TodayPageState extends State<TodayPage> {
-  final List<String> task = ['task1', 'task2', 'task3', 'task4'];
-  int selectedValue = 0;
+  int selectedTaskIndex = 0;
 
-  // Updated timetable size to 13 rows
-  List<List<int?>> timetable = List.generate(13, (index) => List.filled(7, null));
+  // Grid data: 24 hours × 6 slots per hour = 144 intervals
+  List<List<int?>> timetable = List.generate(24, (hour) => List.filled(6, null));
 
   @override
   Widget build(BuildContext context) {
+    final tasksProvider = Provider.of<Tasks>(context);
     var now = DateTime.now();
+    now = DateTime(now.year, now.month, now.day).toUtc();
+
+    // Get tasks for the current date
+    final List<String> tasks = tasksProvider.getTasks(now);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.orange,
-        title: Text('오늘 할 일 리스트'),
-        leading: IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.menu),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('오늘 할 일 리스트'),
+        leading: Builder(
+          builder: (context) {
+            return IconButton(
+              icon: const Icon(Icons.menu), // 햄버거 버튼 아이콘 생성
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
         ),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Text(
+      drawer: const SideMenu(),
+      body: Column(
+        children: [
+          // Date Display
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
               DateFormat('MM월 dd일 EEEE', 'ko').format(now),
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 20), // 상단 날짜와 다른 위젯 간의 여백
-            // 시간표 부분
-            Flexible(
-              flex: 3,
+          ),
+          Expanded(
+            flex: 3,
+            child: SingleChildScrollView(
               child: Table(
-                border: TableBorder.all(),
-                children: List.generate(13, (row) {
-                  return TableRow(
-                    children: List.generate(7, (col) {
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            timetable[row][col] = selectedValue; // 선택된 Task 번호를 해당 셀에 할당
-                          });
-                        },
-                        child: Container(
-                          height: 30,
-                          color: timetable[row][col] != null ? Colors.orangeAccent : Colors.white,
+                columnWidths: const {
+                  0: FixedColumnWidth(40), // Fixed width for hour labels
+                },
+                border: TableBorder.all(color: Colors.grey.shade300),
+                children: [
+                  // Add Header Row
+                  TableRow(
+                    children: [
+                      Container(
+                        height: 40,
+                        color: Colors.grey.shade300,
+                        child: const Center(
+
+                        ),
+                      ),
+                      ...List.generate(6, (interval) {
+                        return Container(
+                          height: 40,
+                          color: Colors.grey.shade300,
                           child: Center(
-                            child: timetable[row][col] != null
-                                ? Text('Task ${timetable[row][col]! + 1}')
-                                : Text(''),
+                            child: Text(
+                              '${(interval + 1) * 10}분',
+                              style: const TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                  // Generate Timetable Rows
+                  ...List.generate(24, (hour) {
+                    return TableRow(
+                      children: [
+                        // Hour label
+                        Container(
+                          color: Colors.grey.shade200,
+                          height: 40,
+                          child: Center(
+                            child: Text(
+                              '$hour',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
-                      );
-                    }),
-                  );
-                }),
+                        // 10-minute intervals for the hour
+                        ...List.generate(6, (interval) {
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                // Toggle activation state
+                                if (timetable[hour][interval] == null) {
+                                  timetable[hour][interval] = selectedTaskIndex; // Activate with current task
+                                } else {
+                                  timetable[hour][interval] = null; // Deactivate
+                                }
+                              });
+                            },
+                            child: Container(
+                              height: 40,
+                              color: timetable[hour][interval] != null
+                                  ? Color(0xFFD3BCFD)
+                                  : Colors.white,
+                              child: Center(
+                                child: timetable[hour][interval] != null
+                                    ? Text(
+                                  tasks[timetable[hour][interval]!], // Display task name
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                )
+                                    : const Text(''),
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    );
+                  }),
+                ],
               ),
             ),
-            SizedBox(height: 20), // 시간표와 리스트 간의 여백
-            // Task 리스트 부분
-            Flexible(
-              flex: 2,
-              child: ListView.builder(
-                itemCount: task.length,
-                itemBuilder: (context, index) {
-                  return RadioListTile<int>(
-                    key: ValueKey(task[index]),
-                    title: Text(task[index]),
-                    value: index,
-                    groupValue: selectedValue,
-                    onChanged: (int? value) {
-                      setState(() {
-                        selectedValue = value!;
-                      });
-                    },
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: 20), // 리스트와 버튼 간의 여백
-            // 버튼 부분
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                FloatingActionButton(
-                  onPressed: () {
+          ),
+          const SizedBox(height: 20),
+          // Task Selection
+          Expanded(
+            flex: 1,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: tasks.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
                     setState(() {
-                      task.add('Task ${task.length + 1}');
+                      selectedTaskIndex = index;
                     });
                   },
-                  child: const Icon(Icons.edit),
-                ),
-                FloatingActionButton(
-                  onPressed: () {},
-                  child: const Icon(Icons.format_list_bulleted),
-                ),
-              ],
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: selectedTaskIndex == index
+                          ? Color(0xFFD3BCFD)
+                          : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Center(
+                      child: Text(
+                        tasks[index],
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+          // Add Task Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              FloatingActionButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/Today/Add', arguments: now);
+                },
+                child: const Icon(Icons.edit),
+              ),
+              const SizedBox(width: 100.0),
+              FloatingActionButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/Today');
+                },
+                child: const Icon(Icons.calendar_month),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+        ],
       ),
     );
   }

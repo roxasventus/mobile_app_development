@@ -55,19 +55,7 @@ class _AddPageState extends State<AddPage> {
                     },
                   ),
                 ),
-                Align(
-                  alignment: Alignment.bottomLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 20.0, bottom: 20.0),
-                    child: FloatingActionButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.pop(context);
-                      },
-                      child: const Icon(Icons.arrow_back),
-                    ),
-                  ),
-                ),
+
               ],
             ),
             Center(child: Text('미완성')),
@@ -81,19 +69,7 @@ class _AddPageState extends State<AddPage> {
                     },
                   ),
                 ),
-                Align(
-                  alignment: Alignment.bottomLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 20.0, bottom: 20.0),
-                    child: FloatingActionButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.pop(context);
-                      },
-                      child: const Icon(Icons.arrow_back),
-                    ),
-                  ),
-                ),
+
               ],
             ),
           ],

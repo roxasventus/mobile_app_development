@@ -46,7 +46,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => const MyHomePage(),
+        '/': (context) => const TodayPage(),
         '/Today': (context) => const DatePage(),
         '/Today/Add': (context) => const AddPage(),
         '/FeedBack': (context) => const FeedBackPage(),
@@ -57,70 +57,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// MyHomePage //////////////////////////////////////
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-
-        title: Text('오늘의 할 일 리스트'),
-        leading: Builder(
-            builder: (context){
-              return IconButton(
-                icon: Icon(Icons.menu), // 햄버거버튼 아이콘 생성
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
-              );
-            }
-        ),
-      ),
-      drawer: SideMenu(),
-      body: Center(
-
-        child: Column(
-
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          Navigator.pushNamed(context, '/Today');
-        },
-        tooltip: 'Increment',
-        child: const Icon(Icons.calendar_month),
-      ),
-    );
-  }
-}
 //////////////////////////////////////////////////////
 
 
