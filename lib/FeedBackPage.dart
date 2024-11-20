@@ -1,8 +1,13 @@
-import 'package:app_project/SideMenu.dart';
+// lib/FeedBackPage.dart
 import 'package:flutter/material.dart';
-import 'main.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'SideMenu.dart';
+import 'TaskProvider.dart';
+import 'task.dart';
 
 class FeedBackPage extends StatefulWidget {
   const FeedBackPage({super.key});
@@ -13,90 +18,90 @@ class FeedBackPage extends StatefulWidget {
 
 class _FeedBackPageState extends State<FeedBackPage> {
   int weekOfYear = 1; // 초기 주차 설정
-  DateTime selectedDate = DateTime.utc(
-    DateTime
-        .now()
-        .year,
-    DateTime
-        .now()
-        .month,
-    DateTime
-        .now()
-        .day,
-  );
+  DateTime selectedDate = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme
-            .of(context)
-            .colorScheme
-            .inversePrimary,
-        title: Text('날짜 단위 피드백'),
+        title: const Text('날짜 단위 피드백'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         leading: Builder(
-            builder: (context) {
-              return IconButton(
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
-                icon: Icon(Icons.menu),
-              );
-            }
+          builder: (context) {
+            return IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.logout),
-          ),
-        ],
       ),
-      drawer: SideMenu(),
+      drawer: const SideMenu(),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
           TableCalendar(
-            focusedDay: DateTime.now(),
+            focusedDay: selectedDate,
             firstDay: DateTime.utc(2024, 1, 1),
-            lastDay: DateTime.utc(2024, 12, 31),
+            lastDay: DateTime.utc(2030, 12, 31),
+            selectedDayPredicate: (day) {
+              return isSameDay(selectedDate, day);
+            },
             onDaySelected: (selectedDay, focusedDay) {
               setState(() {
                 selectedDate = selectedDay;
                 weekOfYear = _calculateWeekOfYear(selectedDay);
               });
+              // 필요 시 Firestore에서 피드백 데이터 가져오기
             },
-          ),
-          Container(
-            height: 50,
-            color: Colors.red.shade100,
-            alignment: Alignment.center,
-            child: Text(
-              '${selectedDate.month}월 간 달성률 : 100%',
-              style: TextStyle(fontSize: 25),
+            headerStyle: const HeaderStyle(
+              titleCentered: true,
+              formatButtonVisible: false,
+            ),
+            calendarStyle: CalendarStyle(
+              todayDecoration: BoxDecoration(
+                color: Colors.transparent,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.purple, width: 1.5),
+              ),
+              todayTextStyle: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+              selectedDecoration: BoxDecoration(
+                color: Colors.purple,
+                shape: BoxShape.circle,
+              ),
+              defaultDecoration: BoxDecoration(shape: BoxShape.circle),
+              weekendDecoration: BoxDecoration(shape: BoxShape.circle),
+              outsideDaysVisible: false,
             ),
           ),
-          Container(
-            height: 50,
-            color: Colors.blue.shade100,
-            alignment: Alignment.center,
-            child: Text(
-              '${selectedDate.month}월 ${weekOfYear}주 간 달성률 : 100%',
-              style: TextStyle(fontSize: 25),
-            ),
+          _buildFeedbackCard(
+            '${selectedDate.month}월 간 달성률',
+            _calculateMonthlyCompletionRate(selectedDate),
+            Colors.red.shade100,
           ),
-          Container(
-            height: 50,
-            color: Colors.green.shade100,
-            alignment: Alignment.center,
-            child: Text(
-              '${selectedDate.month}/${selectedDate.day} 일간 달성률 : 100%',
-              style: TextStyle(fontSize: 25),
-            ),
+          _buildFeedbackCard(
+            '${selectedDate.month}월 ${weekOfYear}주 간 달성률',
+            _calculateWeeklyCompletionRate(selectedDate),
+            Colors.blue.shade100,
           ),
-          Container(
-            height: 50,
-          )
+          _buildFeedbackCard(
+            '${selectedDate.month}/${selectedDate.day} 일간 달성률',
+            _calculateDailyCompletionRate(selectedDate),
+            Colors.green.shade100,
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFeedbackCard(String title, double rate, Color color) {
+    return Container(
+      height: 50,
+      color: color,
+      alignment: Alignment.center,
+      child: Text(
+        '$title : ${rate.toStringAsFixed(1)}%',
+        style: const TextStyle(fontSize: 20),
       ),
     );
   }
@@ -111,4 +116,36 @@ class _FeedBackPageState extends State<FeedBackPage> {
     return ((dayOfMonth + firstWeekday - 1) / 7).ceil();
   }
 
+  // 월간 완료율 계산
+  double _calculateMonthlyCompletionRate(DateTime date) {
+    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    List<Task> monthlyTasks = taskProvider.allTasks.where((task) =>
+    task.date.year == date.year && task.date.month == date.month).toList();
+    if (monthlyTasks.isEmpty) return 0.0;
+    int completed = monthlyTasks.where((task) => task.isCompleted).length;
+    return (completed / monthlyTasks.length) * 100;
+  }
+
+  // 주간 완료율 계산
+  double _calculateWeeklyCompletionRate(DateTime date) {
+    // 해당 주의 시작과 끝 날짜 계산
+    DateTime firstDayOfWeek = date.subtract(Duration(days: date.weekday - 1));
+    DateTime lastDayOfWeek = firstDayOfWeek.add(const Duration(days: 6));
+    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    List<Task> weeklyTasks = taskProvider.allTasks.where((task) =>
+    task.date.isAfter(firstDayOfWeek.subtract(const Duration(days: 1))) &&
+        task.date.isBefore(lastDayOfWeek.add(const Duration(days: 1)))).toList();
+    if (weeklyTasks.isEmpty) return 0.0;
+    int completed = weeklyTasks.where((task) => task.isCompleted).length;
+    return (completed / weeklyTasks.length) * 100;
+  }
+
+  // 일간 완료율 계산
+  double _calculateDailyCompletionRate(DateTime date) {
+    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    List<Task> dailyTasks = taskProvider.getTasksByDate(date);
+    if (dailyTasks.isEmpty) return 0.0;
+    int completed = dailyTasks.where((task) => task.isCompleted).length;
+    return (completed / dailyTasks.length) * 100;
+  }
 }

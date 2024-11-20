@@ -44,12 +44,6 @@ class _WeekPageState extends State<WeekPage> {
               );
             }
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.logout),
-          ),
-        ],
       ),
       drawer: SideMenu(),
       body: Column(

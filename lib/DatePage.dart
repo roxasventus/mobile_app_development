@@ -1,10 +1,13 @@
+// lib/DatePage.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
 import 'SideMenu.dart';
-import 'Tasks.dart';
+import 'TaskProvider.dart';
+import 'task.dart';
+import 'package:app_project/AddPage.dart';
 
 class DatePage extends StatefulWidget {
   const DatePage({super.key});
@@ -19,22 +22,22 @@ class _DatePageState extends State<DatePage> {
 
   @override
   Widget build(BuildContext context) {
-    String dayOfWeek = DateFormat('EEE').format(_focusedDay);
-    String formattedDate = DateFormat('MMM d').format(_focusedDay);
+    String dayOfWeek = DateFormat('EEE', 'ko').format(_focusedDay);
+    String formattedDate = DateFormat('MMM d', 'ko').format(_focusedDay);
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text('날짜별 할 일 리스트'),
         leading: Builder(
-            builder: (context){
-              return IconButton(
-                icon: Icon(Icons.menu), // 햄버거버튼 아이콘 생성
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
-              );
-            }
+          builder: (context) {
+            return IconButton(
+              icon: Icon(Icons.menu), // 햄버거버튼 아이콘 생성
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
         ),
       ),
       drawer: SideMenu(),
@@ -60,7 +63,7 @@ class _DatePageState extends State<DatePage> {
                   _selectedDay = selectedDay;
                   _focusedDay = focusedDay;
                 });
-                _showTasksBottomSheet(selectedDay); // Show tasks when a day is selected
+                _showTasksBottomSheet(selectedDay);
               },
               headerStyle: HeaderStyle(
                 titleCentered: true,
@@ -97,17 +100,15 @@ class _DatePageState extends State<DatePage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        final tasks = Provider.of<Tasks>(context).getTasks(selectedDay) ?? [];
-        final Map<String, bool> taskCompletion = {
-          for (var task in tasks) task: false,
-        };
+        final taskProvider = Provider.of<TaskProvider>(context);
+        final tasks = taskProvider.getTasksByDate(selectedDay);
 
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return Container(
               padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+              height: MediaQuery.of(context).size.height * 0.6, // Adjust height
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     width: 40,
@@ -119,44 +120,54 @@ class _DatePageState extends State<DatePage> {
                     ),
                   ),
                   Text(
-                    DateFormat('MMM d, yyyy').format(selectedDay),
+                    DateFormat('MMM d, yyyy', 'ko').format(selectedDay),
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 16.0),
-                  ...tasks.map((task) {
-                    return CheckboxListTile(
-                      value: taskCompletion[task],
-                      onChanged: (bool? value) {
-                        setState(() {
-                          taskCompletion[task] = value ?? false;
-                        });
+                  Expanded(
+                    child: tasks.isEmpty
+                        ? Center(child: Text('할 일이 없습니다.', style: TextStyle(color: Colors.grey)))
+                        : ListView.builder(
+                      itemCount: tasks.length,
+                      itemBuilder: (context, index) {
+                        final task = tasks[index];
+                        return CheckboxListTile(
+                          value: task.isCompleted,
+                          onChanged: (bool? value) {
+                            taskProvider.toggleTaskCompletion(task.id);
+                          },
+                          title: Text(task.title),
+                          subtitle: Text(task.description),
+                          secondary: CircleAvatar(
+                            backgroundColor: Colors.purple.shade100,
+                            child: Icon(Icons.task, color: Colors.purple),
+                          ),
+                        );
                       },
-                      title: Text(task),
-                      secondary: CircleAvatar(
-                        backgroundColor: Colors.purple.shade100,
-                        child: Icon(Icons.task, color: Colors.purple),
-                      ),
-                    );
-                  }),
-                  if (tasks.isEmpty)
-                    Text('할 일이 없습니다.', style: TextStyle(color: Colors.grey)),
+                    ),
+                  ),
                   SizedBox(height: 16.0),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       FloatingActionButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/Today/Add', arguments: selectedDay);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddPage(
+                                selectedDate: selectedDay, // 전달받은 날짜를 생성자에 전달
+                              ),
+                            ),
+                          );
                         },
                         child: const Icon(Icons.edit),
                       ),
-                      SizedBox(width: 100.0),
                       FloatingActionButton(
                         onPressed: () {
                           Navigator.pop(context);
-                          Navigator.pop(context);
                         },
-                        child: const Icon(Icons.format_list_bulleted),
+                        child: const Icon(Icons.close),
                       ),
                     ],
                   ),
@@ -168,6 +179,4 @@ class _DatePageState extends State<DatePage> {
       },
     );
   }
-
-
 }
