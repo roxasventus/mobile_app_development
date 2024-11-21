@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:app_project/TodayPage.dart';
-import 'package:pigeon_generated/pigeon_api.dart'; // Pigeon API가 자동 생성된 파일
+import 'pigeon_generated/pigeon_api.dart';
 
 class RegisterPage extends StatelessWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -56,7 +56,8 @@ class _RegisterFormState extends State<RegisterForm> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  final newUser = await _authentication.createUserWithEmailAndPassword(
+                  final newUser =
+                  await _authentication.createUserWithEmailAndPassword(
                     email: email,
                     password: password,
                   );
@@ -88,20 +89,13 @@ class _RegisterFormState extends State<RegisterForm> {
 
   Future<void> fetchAdditionalUserDetails(User user) async {
     try {
-      final result = await PigeonApi.getUserDetails(user.uid); // Pigeon 호출
-      if (result is List<Object?> && result.isNotEmpty) {
-        try {
-          // 반환값을 변환하여 PigeonUserDetails 객체 생성
-          final userDetails = PigeonUserDetails(
-            name: result[0] as String,
-            age: result[1] as int,
-          );
-          print('User details fetched: $userDetails');
-        } catch (e) {
-          print('Error converting result to PigeonUserDetails: $e');
-        }
+      PigeonApi api = PigeonApi(); // 인스턴스 생성
+      final userDetails = await api.getUserDetails(user.uid); // Pigeon 호출
+
+      if (userDetails != null) {
+        print('User details fetched: ${userDetails.name}, ${userDetails.age}');
       } else {
-        print('Unexpected result type: ${result.runtimeType}');
+        print('No user details found.');
       }
     } catch (e) {
       print('Error fetching user details: $e');
