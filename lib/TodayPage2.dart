@@ -101,11 +101,26 @@ class _TodayPageState extends State<TodayPage> {
   int selectedValue = 0 ;
   List<String> task = ['task1', 'task2','Task2','Task4'];
   List<int?> location = List.generate(4, (index) => 0);
-
+  int _start_location = 0;
+  int _end_location = 0;
+  int _change_col = 6;
+  int _change_row = 0;
   final _valueList = List.generate(10, (i) => i);
   final _formKey = GlobalKey<FormState>();
+  int _start_end = 0 ;
+
+  List<Color> colorList = [
+    Colors.pink.shade100,
+    Colors.lightBlueAccent.shade100,
+    Colors.greenAccent.shade100,
+    Colors.orange.shade100,
+    Colors.purple.shade100,
+    Colors.yellow.shade100,
+  ];
+
 
   List<List<int?>> timetable = List.generate(25, (index) => List.filled(7, null));
+  List<List<Color?>> colortable = List.generate(25, (index) => List.filled(7, Colors.white));
 
   var now = DateTime.now();
   @override
@@ -165,7 +180,7 @@ class _TodayPageState extends State<TodayPage> {
                                   children: List.generate(7, (time){
                                     return Container(
 
-                                      color: Colors.blue,
+                                      color: Colors.lightBlue.shade400,
                                       height: 30,
                                       width: 30,
                                       child: time == 0
@@ -180,7 +195,7 @@ class _TodayPageState extends State<TodayPage> {
                                 if ( col == 0 ) {
                                   return Container(
 
-                                    color: Colors.lightBlue,
+                                    color: Colors.lightBlue.shade400,
                                     height: 30,
                                     width: 30,
                                     child: row == 0
@@ -189,14 +204,64 @@ class _TodayPageState extends State<TodayPage> {
                                   );
                                 }
                                 return GestureDetector(
-                                  onLongPressStart: (detail){
+                                  onLongPress: (){
                                     setState(() {
-                                      location[0] = row;
-                                      location[1] = col;
-                                      print(location);
+
+                                      print('LongPress ${row} , ${col} _start_end: ${_start_end}');
+
+                                      if (_start_end == 0) {
+                                        print('if');
+                                        _start_end = 1;
+                                        location[0] = row;
+                                        location[1] = col;
+                                      }
+                                      else{
+                                        print('else');
+                                        _start_end = 0;
+                                        location[2] = row;
+                                        location[3] = col;
+                                        _start_location = (location[0]!-1)*6 + location[1]!;
+                                        _end_location = (location[2]!-1)*6 + location[3]!;
+
+                                        if(_end_location < _start_location) {
+                                          print('swap before ${_end_location} , ${_start_location} _start_end: ${_start_end}');
+                                          int temp = _end_location;
+                                          _end_location = _start_location;
+                                          _start_location = temp;
+                                          print('swap after ${_end_location} , ${_start_location} _start_end: ${_start_end}');
+                                        }
+
+                                        while (_start_location <= _end_location){
+
+                                          _start_location%6 == 0
+                                              ? _change_col = 6
+                                              : _change_col = _start_location%6;
+
+                                          _change_col == 6
+                                          ? _change_row = _start_location~/6
+                                          : _change_row = _start_location~/6 + 1;
+
+                                          print('ValueChanged ${_change_row} , ${_change_col}');
+
+                                          (timetable[_change_row][_change_col] == selectedValue)
+                                              ? timetable[_change_row ][_change_col] = null
+                                              :timetable[_change_row][_change_col] = selectedValue;
+                                          _start_location += 1;
+
+                                          (colortable[_change_row][_change_col] == selectedValue)
+                                              ? colortable[_change_row ][_change_col] = Colors.white
+                                              :colortable[_change_row][_change_col] = colorList[selectedValue%6];
+                                        }
+
+
+
+
+                                        location = [0,0,0,0];
+                                      }
 
                                     });
                                   },
+                                  /*
                                   onPanUpdate: (detail){
                                     setState(() {
                                       location[2] = row;
@@ -206,18 +271,41 @@ class _TodayPageState extends State<TodayPage> {
 
                                     });
                                   },
+                                  */
+
                                   onTap: () {
                                     setState(() {
 
                                       ((timetable[row][col] == null) | (timetable[row][col] != selectedValue))
                                           ?timetable[row][col] = selectedValue
                                           : timetable[row][col] = null; // 선택된 Task 번호를 해당 셀에 할당
+
+                                      (timetable[row][col] == null)
+                                          ? colortable[row][col] = Colors.white
+                                          :colortable[row][col] = colorList[selectedValue%6];
+
+                                      print('onTap ${row} , ${col} ');
                                     });
                                   },
                                   child: Container(
                                     height: 30,
                                     width: 30,
-                                    color: (timetable[row][col] != null) || ( (row == 0 ) || ( col == 0 ) ) ? Colors.orangeAccent : Colors.white,
+
+                                    decoration: BoxDecoration(
+
+                                      color: (timetable[row][col] != null) || ( (row == 0 ) || ( col == 0 ) )
+                                          ? colortable[row][col] : Colors.white,
+                                      border: ((location[0] == row) & (location[1] == col))
+                                          ? Border.all(
+                                        color: Colors.red,  // 조건이 참일 때 빨간색 테두리
+                                        width: 5,
+                                      )
+                                          : Border.all(
+                                        color: Colors.black,  // 조건이 거짓일 때 검은색 테두리
+                                        width: 1,
+                                      ),
+                                      //borderRadius: BorderRadius.circular(10),
+                                    ),
                                     child: Center(
                                       child: timetable[row][col] != null
                                           ? Text('${timetable[row][col]! + 1}',style: TextStyle(fontSize: 20),textAlign: TextAlign.center,)
