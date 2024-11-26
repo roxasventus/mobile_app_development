@@ -91,6 +91,7 @@ class _RegisterFormState extends State<RegisterForm> {
     try {
       PigeonApi api = PigeonApi(); // 인스턴스 생성
       final userDetails = await api.getUserDetails(user.uid); // Pigeon 호출
+      print('Received userDetails: $userDetails');
 
       if (userDetails != null) {
         print('User details fetched: ${userDetails.name}, ${userDetails.age}');
