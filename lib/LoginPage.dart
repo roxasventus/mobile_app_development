@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'RegisterPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'pigeon_generated/pigeon_api.dart';
+import 'RegisterPage.dart';
+import 'package:app_project/TodayPage.dart'; // 로그인 성공 후 이동할 페이지
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -29,6 +29,8 @@ class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
   String email = '';
   String password = '';
+  String errorMessage = ''; // 오류 메시지를 위한 변수
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -57,34 +59,59 @@ class _LoginFormState extends State<LoginForm> {
               height: 20,
             ),
             ElevatedButton(
-                onPressed: () async {
-                  try {
-                    final currentUser =
-                    await _authentication.signInWithEmailAndPassword(
-                        email: email, password: password);
-                    if (currentUser.user != null) {
-                      _formKey.currentState!.reset();
-                      // 추가 작업이 필요하면 여기에 작성하세요.
-                    }
-                  } catch (e) {
-                    print(e);
+              onPressed: () async {
+                try {
+                  // Firebase Authentication을 사용하여 로그인 시도
+                  final currentUser = await _authentication.signInWithEmailAndPassword(
+                    email: email,
+                    password: password,
+                  );
+
+                  if (currentUser.user != null) {
+                    _formKey.currentState!.reset();
+                    // 로그인 성공 시 TodayPage로 이동
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TodayPage(),
+                      ),
+                    );
                   }
-                },
-                child: const Text('Enter')),
+                } on FirebaseAuthException catch (e) {
+                  setState(() {
+                    errorMessage = 'Error: ${e.code} - ${e.message ?? 'Unknown error'}'; // 오류 코드와 메시지
+                  });
+                  print("FirebaseAuthException: ${e.code}");
+                  print("Error details: ${e.details}");
+                }
+              },
+              child: const Text('Enter'),
+            ),
+            if (errorMessage.isNotEmpty) // 에러 메시지가 있으면 화면에 표시
+              Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Text(
+                  errorMessage,
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 const Text('If you did not register,'),
                 TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => RegisterPage())); // 수정된 부분
-                    },
-                    child: const Text('Register your email'))
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RegisterPage(),
+                      ),
+                    );
+                  },
+                  child: const Text('Register your email'),
+                ),
               ],
-            )
+            ),
           ],
         ),
       ),

@@ -42,7 +42,6 @@ dependencies:
   provider: ^6.1.2
   uuid: ^3.0.7
   collection: ^1.16.0
-  pigeon: ^1.0.19
   #파일 관리 시스템에서 사용
   file_picker: ^5.2.6
   path_provider: ^2.0.14
