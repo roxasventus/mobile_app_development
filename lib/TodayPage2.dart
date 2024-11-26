@@ -76,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.orange,
+        backgroundColor: Colors.purple.shade100,
         title: Text('오늘 할 일 리스트'),
         leading: IconButton(
           onPressed: () {},
@@ -132,19 +132,19 @@ class _TodayPageState extends State<TodayPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
-                height: 10,
+                height: 20,
               ),
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: Colors.black, // 경계선 색상
+                    color: Colors.grey.shade600, // 경계선 색상
                     width: 3, // 경계선 두께
                   ),
-                  color: Colors.lightGreenAccent.shade100,
+                  color: Colors.yellowAccent.shade100,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: SizedBox(
-                  width: 380,
+                  width: 300,
                   height: 30,
                   child: Text(
                     DateFormat('MM월 dd일 EEEE', 'ko').format(now),
@@ -179,8 +179,7 @@ class _TodayPageState extends State<TodayPage> {
                               return TableRow(
                                   children: List.generate(7, (time){
                                     return Container(
-
-                                      color: Colors.lightBlue.shade400,
+                                      color: Colors.lightBlue.shade100,
                                       height: 30,
                                       width: 30,
                                       child: time == 0
@@ -195,7 +194,7 @@ class _TodayPageState extends State<TodayPage> {
                                 if ( col == 0 ) {
                                   return Container(
 
-                                    color: Colors.lightBlue.shade400,
+                                    color: Colors.lightBlue.shade100,
                                     height: 30,
                                     width: 30,
                                     child: row == 0
