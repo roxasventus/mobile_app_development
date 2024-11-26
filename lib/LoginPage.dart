@@ -82,7 +82,7 @@ class _LoginFormState extends State<LoginForm> {
                     errorMessage = 'Error: ${e.code} - ${e.message ?? 'Unknown error'}'; // 오류 코드와 메시지
                   });
                   print("FirebaseAuthException: ${e.code}");
-                  print("Error details: ${e.details}");
+                  print("Error message: ${e.message}");  // 'details' 필드는 제거
                 }
               },
               child: const Text('Enter'),

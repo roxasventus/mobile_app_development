@@ -6,13 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'FeedBackPage.dart';
-import 'FileManagement.dart';
 import 'LoginPage.dart';
-import 'SideMenu.dart';
-import 'WeekPage.dart';
-import 'DatePage.dart';
-import 'AddPage.dart';
 import 'TaskProvider.dart'; // TaskProvider import
 import 'TodayPage.dart';
 import 'task.dart'; // Task model import
