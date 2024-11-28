@@ -33,8 +33,8 @@ class TaskManager {
       final snapshot = await _tasksCollection
           .where('userName', isEqualTo: userName)
           .where('date',
-          isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime(
-              date.year, date.month, date.day, 0, 0, 0))) // start of day
+          isGreaterThanOrEqualTo: Timestamp.fromDate(
+              DateTime(date.year, date.month, date.day, 0, 0, 0))) // start of day
           .where('date',
           isLessThan: Timestamp.fromDate(
               DateTime(date.year, date.month, date.day, 23, 59, 59))) // end of day
@@ -129,18 +129,18 @@ class TaskManager {
         isCompleted: false,
       );
     }).toList())
-        .asBroadcastStream(); // 브로드캐스트로 변환
+        .asBroadcastStream(); // Broadcast stream for multiple listeners
   }
 
   // Fetch only incomplete tasks for the logged-in user
-  Stream<List<Task>> fetchIncompleteTasksStream() {
-    return _tasksCollection
-        .where('userName', isEqualTo: _auth.currentUser?.uid)
+  Stream<List<Task>> fetchIncompleteTasksStream() async* {
+    final userName = await currentUserName;
+
+    yield* _tasksCollection
+        .where('userName', isEqualTo: userName)
         .where('isCompleted', isEqualTo: false)
         .snapshots()
         .map((snapshot) =>
-        snapshot.docs.map((doc) => Task.fromFirestore(doc)).toList())
-        .asBroadcastStream();  // Make the stream broadcast
+        snapshot.docs.map((doc) => Task.fromFirestore(doc)).toList());
   }
-
 }

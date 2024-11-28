@@ -96,7 +96,7 @@ class _AddPageState extends State<AddPage> {
         drawer: SideMenu(),
         body: TabBarView(
           children: [
-            ///할일///////
+            /// Task Tab
             Column(
               children: [
                 const SizedBox(height: 10),
@@ -108,215 +108,215 @@ class _AddPageState extends State<AddPage> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Form(
-                  key: _formKey,
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: TextFormField(
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            labelText: 'Task Name',
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a task name.';
-                            }
-                            return null;
-                          },
-                          onSaved: (value) {
-                            _taskName = value ?? "";
-                          },
-                          initialValue: _taskName,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      GestureDetector(
-                        child: Container(
-                          width: 80,
-                          height: 50,
-                          color: Colors.deepPurple,
-                          alignment: Alignment.center,
-                          child: const Text(
-                            '+',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        onTap: () async {
-                          if (_formKey.currentState?.validate() ?? false) {
-                            _formKey.currentState?.save();
-                            try {
-                              final userName = await _taskManager.currentUserName;
-                              await _taskManager.addToTaskList(_taskName, userName);
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Task added successfully!')),
-                              );
-
-                              setState(() {
-                                _taskName = "";
-                              });
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Failed to add task: $e')),
-                              );
-                            }
-                          }
-                        },
-                      ),
-                      const SizedBox(width: 10),
-                    ],
-                  ),
-                ),
+                _buildTaskForm(),
                 const SizedBox(height: 10),
                 Expanded(
                   flex: 2,
                   child: _isLoading
                       ? const Center(child: CircularProgressIndicator())
-                      : ReorderableListView.builder(
-                    itemCount: _tasks.length,
-                    itemBuilder: (context, index) {
-                      final task = _tasks[index];
-                      return Dismissible(
-                        key: ValueKey('${task.id}-${task.title}'),
-                        onDismissed: (direction) async {
-                          try {
-                            await _taskManager.deleteTask(task.title);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Task "${task.title}" deleted.')),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Failed to delete task: $e')),
-                            );
-                          }
-                        },
-                        child: ListTile(
-                          title: Text(task.title),
-                          leading: const Icon(Icons.task),
-                          trailing: const Icon(Icons.navigate_next),
-                          onTap: () async {
-                            try {
-                              final userName = await _taskManager.currentUserName;
-                              final newTask = Task(
-                                title: task.title,
-                                date: widget.selectedDay,
-                                userName: userName,
-                              );
-
-                              await _taskManager.addTask(newTask);
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Task "${task.title}" added to ${widget.selectedDay.toLocal()}!')),
-                              );
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Failed to add task: $e')),
-                              );
-                            }
-                          },
-                        ),
-                      );
-                    },
-                    onReorder: (int oldIndex, int newIndex) async {
-                      if (oldIndex < newIndex) newIndex -= 1;
-
-                      final reorderedTasks = List.of(_tasks);
-                      final item = reorderedTasks.removeAt(oldIndex);
-                      reorderedTasks.insert(newIndex, item);
-
-                      setState(() {
-                        // reorderedTasks를 사용하여 UI를 업데이트
-                      });
-                    },
-                  ),
+                      : _buildTaskList(),
                 ),
               ],
             ),
-            ///미완성////
+
+            /// Incomplete Task Tab
             Column(
               children: [
                 const SizedBox(height: 10),
                 Text(
                   '미완성 할 일',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
+                  style: const TextStyle(fontSize: 16, color: Colors.black),
                 ),
                 const SizedBox(height: 10),
                 Expanded(
                   flex: 2,
                   child: _isLoading
                       ? const Center(child: CircularProgressIndicator())
-                      : ReorderableListView(
-                    onReorder: (oldIndex, newIndex) async {
-                      if (oldIndex < newIndex) newIndex -= 1;
-
-                      final reorderedTasks = List.of(_incompleteTasks);
-                      final item = reorderedTasks.removeAt(oldIndex);
-                      reorderedTasks.insert(newIndex, item);
-
-                      setState(() {
-                        // Update the task list with new order
-                        _incompleteTasks = reorderedTasks;
-                      });
-
-                      // You can also save the new order to Firebase here
-                    },
-                    children: _incompleteTasks.map((task) {
-                      return Dismissible(
-                        key: ValueKey('${task.id}-${task.title}'),
-                        onDismissed: (direction) async {
-                          try {
-                            await _taskManager.deleteTask(task.id);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Task "${task.title}" deleted.')),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Failed to delete task: $e')),
-                            );
-                          }
-                        },
-                        child: ListTile(
-                          title: Text(task.title),
-                          leading: const Icon(Icons.task),
-                          trailing: const Icon(Icons.navigate_next),
-                          onTap: () async {
-                            try {
-                              final userName = await _taskManager.currentUserName;
-                              final newTask = Task(
-                                title: task.title,
-                                date: widget.selectedDay,
-                                userName: userName,
-                              );
-
-                              await _taskManager.addTask(newTask);
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Task "${task.title}" added to ${widget.selectedDay.toLocal()}!')),
-                              );
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Failed to add task: $e')),
-                              );
-                            }
-                          },
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                      : _buildIncompleteTaskList(),
                 ),
               ],
             ),
 
-
-            const Center(child: Text('과거기록')),
+            /// Past Records Tab
+            const Center(
+              child: Text(
+                '과거기록',
+                style: TextStyle(fontSize: 16, color: Colors.black),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildTaskForm() {
+    return Form(
+      key: _formKey,
+      child: Row(
+        children: [
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Task Name',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a task name.';
+                }
+                return null;
+              },
+              onSaved: (value) {
+                _taskName = value ?? "";
+              },
+              initialValue: _taskName,
+            ),
+          ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            child: Container(
+              width: 80,
+              height: 50,
+              color: Colors.deepPurple,
+              alignment: Alignment.center,
+              child: const Text(
+                '+',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            onTap: _addTask,
+          ),
+          const SizedBox(width: 10),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaskList() {
+    return ReorderableListView.builder(
+      itemCount: _tasks.length,
+      itemBuilder: (context, index) {
+        final task = _tasks[index];
+        return Dismissible(
+          key: ValueKey('${task.id}-${task.title}'),
+          onDismissed: (direction) async {
+            try {
+              await _taskManager.deleteTask(task.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Task "${task.title}" deleted.')),
+              );
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to delete task: $e')),
+              );
+            }
+          },
+          child: ListTile(
+            title: Text(task.title),
+            leading: const Icon(Icons.task),
+            trailing: const Icon(Icons.navigate_next),
+            onTap: () => _addTaskToDate(task),
+          ),
+        );
+      },
+      onReorder: _reorderTasks,
+    );
+  }
+
+  Widget _buildIncompleteTaskList() {
+    return ReorderableListView.builder(
+      itemCount: _incompleteTasks.length,
+      itemBuilder: (context, index) {
+        final task = _incompleteTasks[index];
+
+        // Formatting date as 'yyyy-MM-dd'
+        final formattedDate =
+            "${task.date.year}-${task.date.month.toString().padLeft(2, '0')}-${task.date.day.toString().padLeft(2, '0')}";
+
+        return Dismissible(
+          key: ValueKey('${task.id}-${task.title}'),
+          onDismissed: (direction) async {
+            try {
+              await _taskManager.deleteTask(task.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Task "${task.title}" deleted.')),
+              );
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to delete task: $e')),
+              );
+            }
+          },
+          child: ListTile(
+            title: Text("${task.title} ($formattedDate)"),
+            leading: const Icon(Icons.task),
+            trailing: const Icon(Icons.navigate_next),
+            onTap: () => _addTaskToDate(task),
+          ),
+        );
+      },
+      onReorder: _reorderIncompleteTasks,
+    );
+  }
+
+  Future<void> _addTask() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState?.save();
+      try {
+        final userName = await _taskManager.currentUserName;
+        await _taskManager.addToTaskList(_taskName, userName);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Task added successfully!')),
+        );
+
+        setState(() {
+          _taskName = "";
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add task: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _addTaskToDate(Task task) async {
+    try {
+      final userName = await _taskManager.currentUserName;
+      final newTask = Task(
+        title: task.title,
+        date: _date,
+        userName: userName,
+        isCompleted: false,
+      );
+      await _taskManager.addTask(newTask);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Task "${task.title}" added to ${_date.toLocal()}!')),
+      );
+    } catch (e) {
+      print('Error adding task: $e');
+    }
+  }
+
+  void _reorderTasks(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) newIndex -= 1;
+
+    setState(() {
+      final item = _tasks.removeAt(oldIndex);
+      _tasks.insert(newIndex, item);
+    });
+  }
+
+  void _reorderIncompleteTasks(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) newIndex -= 1;
+
+    setState(() {
+      final item = _incompleteTasks.removeAt(oldIndex);
+      _incompleteTasks.insert(newIndex, item);
+    });
   }
 }
