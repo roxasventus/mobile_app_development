@@ -21,11 +21,14 @@ class _AddPageState extends State<AddPage> {
   String _taskName = "";
   late Stream<List<Task>> _taskStream;
   late Stream<List<Task>> _incompleteTaskStream;
+  late Stream<List<Task>> _pastTaskStream;
   late StreamSubscription<List<Task>> _taskStreamSubscription;
   late StreamSubscription<List<Task>> _incompleteTaskStreamSubscription;
+  late StreamSubscription<List<Task>> _pastTaskStreamSubscription;
 
   List<Task> _tasks = [];
   List<Task> _incompleteTasks = [];
+  List<Task> _pastTasks = [];
   bool _isLoading = true;
 
   @override
@@ -36,7 +39,7 @@ class _AddPageState extends State<AddPage> {
     // Initialize streams
     _taskStream = _taskManager.fetchTaskListStream();
     _incompleteTaskStream = _taskManager.fetchIncompleteTasksStream();
-
+    _pastTaskStream = _taskManager.fetchPastTasksStream();
     // Listen to task stream
     _taskStreamSubscription = _taskStream.listen((taskList) {
       setState(() {
@@ -52,6 +55,14 @@ class _AddPageState extends State<AddPage> {
         _isLoading = false;
       });
     });
+
+    // Listen to past task stream
+    _pastTaskStreamSubscription = _pastTaskStream.listen((taskList) {
+      setState(() {
+        _pastTasks = taskList;
+        _isLoading = false;
+      });
+    });
   }
 
   @override
@@ -59,6 +70,7 @@ class _AddPageState extends State<AddPage> {
     // Cancel the subscriptions
     _taskStreamSubscription.cancel();
     _incompleteTaskStreamSubscription.cancel();
+    _pastTaskStreamSubscription.cancel();
     super.dispose();
   }
 
@@ -138,11 +150,34 @@ class _AddPageState extends State<AddPage> {
             ),
 
             /// Past Records Tab
-            const Center(
-              child: Text(
-                '과거기록',
-                style: TextStyle(fontSize: 16, color: Colors.black),
-              ),
+            Column(
+              children: [
+                const SizedBox(height: 10),
+                Text(
+                  '지난 주 오늘 했던 일',
+                  style: const TextStyle(fontSize: 16, color: Colors.black),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  flex: 2,
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : FutureBuilder<List<Task>>(
+                    future: _taskManager.getTasksOneWeekAgo(DateTime.now()),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                        return _buildPastTaskList(snapshot.data!);
+                      } else {
+                        return const Center(child: Text('No past tasks available.'));
+                      }
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -250,7 +285,7 @@ class _AddPageState extends State<AddPage> {
             }
           },
           child: ListTile(
-            title: Text("${task.title} ($formattedDate)"),
+            title: Text("${task.title} - ($formattedDate 미완성)"),
             leading: const Icon(Icons.task),
             trailing: const Icon(Icons.navigate_next),
             onTap: () => _addTaskToDate(task),
@@ -260,6 +295,43 @@ class _AddPageState extends State<AddPage> {
       onReorder: _reorderIncompleteTasks,
     );
   }
+
+  Widget _buildPastTaskList(List<Task> pastTasks) {
+    return ReorderableListView.builder(
+      itemCount: pastTasks.length,
+      itemBuilder: (context, index) {
+        final task = pastTasks[index];
+
+        // Formatting date as 'yyyy-MM-dd'
+        final formattedDate =
+            "${task.date.year}-${task.date.month.toString().padLeft(2, '0')}-${task.date.day.toString().padLeft(2, '0')}";
+
+        return Dismissible(
+          key: ValueKey('${task.id}-${task.title}'),
+          onDismissed: (direction) async {
+            try {
+              await _taskManager.deleteTask(task.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Task "${task.title}" deleted.')),
+              );
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to delete task: $e')),
+              );
+            }
+          },
+          child: ListTile(
+            title: Text("${task.title} - ($formattedDate)"),
+            leading: const Icon(Icons.task),
+            trailing: const Icon(Icons.navigate_next),
+            onTap: () => _addTaskToDate(task),
+          ),
+        );
+      },
+      onReorder: _reorderPastTasks,
+    );
+  }
+
 
   Future<void> _addTask() async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -317,6 +389,16 @@ class _AddPageState extends State<AddPage> {
     setState(() {
       final item = _incompleteTasks.removeAt(oldIndex);
       _incompleteTasks.insert(newIndex, item);
+    });
+  }
+
+  void _reorderPastTasks(int oldIndex, int newIndex) {
+    setState(() {
+      if (oldIndex < newIndex) {
+        newIndex -= 1;
+      }
+      final task = _pastTasks.removeAt(oldIndex);
+      _pastTasks.insert(newIndex, task);
     });
   }
 }

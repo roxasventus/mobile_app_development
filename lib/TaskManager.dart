@@ -47,16 +47,22 @@ class TaskManager {
     }
   }
 
-  // Fetch tasks created one week ago (from 7 days ago until today)
-  Future<List<Task>> getTasksOneWeekAgo() async {
+  // Fetch tasks created one week ago (from 7 days ago until the given date)
+  Future<List<Task>> getTasksOneWeekAgo(DateTime date) async {
     final userName = await currentUserName;
     try {
-      final oneWeekAgo = DateTime.now().subtract(const Duration(days: 7));
+      // 7일 전 날짜 계산
+      final oneWeekAgo = date.subtract(const Duration(days: 7));
 
+      // 7일 전부터 그날의 끝까지 필터링
+      final startOfDay = DateTime(oneWeekAgo.year, oneWeekAgo.month, oneWeekAgo.day, 0, 0, 0);
+      final endOfDay = DateTime(oneWeekAgo.year, oneWeekAgo.month, oneWeekAgo.day, 23, 59, 59);
+
+      // Firestore에서 1주일 전의 특정 날짜에 해당하는 테스크들만 가져옴
       final snapshot = await _tasksCollection
           .where('userName', isEqualTo: userName)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(oneWeekAgo))
-          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(DateTime.now()))
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
           .get();
 
       return snapshot.docs.map((doc) => Task.fromFirestore(doc)).toList();
@@ -65,6 +71,8 @@ class TaskManager {
       return [];
     }
   }
+
+
 
   // Add a new task
   Future<void> addTask(Task task) async {
@@ -117,9 +125,11 @@ class TaskManager {
   }
 
   // Fetch tasks from the taskList collection for the logged-in user
-  Stream<List<Task>> fetchTaskListStream() {
-    return _firestore
+  Stream<List<Task>> fetchTaskListStream() async* {
+    final userName = await currentUserName;  // Get the current user's username
+    yield* _firestore
         .collection('taskList')
+        .where('userName', isEqualTo: userName)  // Filter tasks by userName
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) {
       return Task(
@@ -129,7 +139,7 @@ class TaskManager {
         isCompleted: false,
       );
     }).toList())
-        .asBroadcastStream(); // Broadcast stream for multiple listeners
+        .asBroadcastStream();  // Broadcast stream for multiple listeners
   }
 
   // Fetch only incomplete tasks for the logged-in user
@@ -139,6 +149,20 @@ class TaskManager {
     yield* _tasksCollection
         .where('userName', isEqualTo: userName)
         .where('isCompleted', isEqualTo: false)
+        .snapshots()
+        .map((snapshot) =>
+        snapshot.docs.map((doc) => Task.fromFirestore(doc)).toList());
+  }
+
+  // Fetch tasks created one week ago (from 7 days ago until today) as a stream
+  Stream<List<Task>> fetchPastTasksStream() async* {
+    final userName = await currentUserName;
+    final oneWeekAgo = DateTime.now().subtract(const Duration(days: 7));
+
+    yield* _tasksCollection
+        .where('userName', isEqualTo: userName)
+        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(oneWeekAgo))
+        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(DateTime.now()))
         .snapshots()
         .map((snapshot) =>
         snapshot.docs.map((doc) => Task.fromFirestore(doc)).toList());
