@@ -31,7 +31,6 @@ class Task {
       isCompleted: data['isCompleted'] ?? false,
     );
   }
-
   // toMap method now uses TaskManager to get the current user's userName
   Future<Map<String, dynamic>> toMap() async {
     final taskManager = TaskManager();

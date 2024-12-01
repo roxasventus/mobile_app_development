@@ -111,8 +111,8 @@ class _FeedBackPageState extends State<FeedBackPage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('피드백 페이지'),
       ),
+      drawer: const SideMenu(),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
           TableCalendar(
             focusedDay: selectedDate,
@@ -164,6 +164,18 @@ class _FeedBackPageState extends State<FeedBackPage> {
           ),
           const SizedBox(height: 20),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFeedbackCard(String title, double rate, Color color) {
+    return Container(
+      height: 50,
+      color: color,
+      alignment: Alignment.center,
+      child: Text(
+        '$title : ${rate.toStringAsFixed(1)}%',
+        style: const TextStyle(fontSize: 20),
       ),
     );
   }
