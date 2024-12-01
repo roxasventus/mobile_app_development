@@ -1,6 +1,6 @@
 // SideMenu.dart
 import 'package:appproject/FeedBackPage.dart';
-import 'package:appproject/FileManagement.dart';
+import 'package:appproject/Filemanagement.dart';
 import 'package:flutter/material.dart';
 import 'package:appproject/TodayPage.dart';
 import 'package:appproject/WeekPage.dart';
@@ -81,7 +81,7 @@ class SideMenu extends StatelessWidget {
             onTap: () {
             Navigator.of(context).popUntil((route) => route.isFirst);
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => Filemanagement()),
+                MaterialPageRoute(builder: (context) => FileManagement()),
               );
             },
           ),

@@ -1,117 +1,124 @@
-// lib/FileManagement.dart
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'SideMenu.dart'; // 사이드 메뉴를 가져옵니다.
-
-import 'SideMenu.dart';
-import 'TaskProvider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:open_file/open_file.dart';
 
 class FileManagement extends StatefulWidget {
-  const FileManagement({super.key});
+  const FileManagement({Key? key}) : super(key: key);
 
   @override
   State<FileManagement> createState() => _FileManagementState();
 }
 
 class _FileManagementState extends State<FileManagement> {
-  final _searchController = TextEditingController();
-  List<File> _files = []; // Local files
-  List<Map<String, dynamic>> _fileMetadata = []; // Firestore metadata
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  List<Map<String, dynamic>> _fileMetadata = [];
 
   @override
   void initState() {
     super.initState();
-    _initializeFiles();
     _fetchFileMetadata();
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  // Initialize local files directory
-  Future<void> _initializeFiles() async {
-    final appDir = await getApplicationDocumentsDirectory();
-    final targetDir = Directory('${appDir.path}/files');
-    if (!await targetDir.exists()) {
-      await targetDir.create(recursive: true);
-    }
-    setState(() {
-      _files = targetDir.listSync().whereType<File>().toList();
-    });
-  }
-
-  // Fetch file metadata from Firestore
+  // Fetch file metadata for the logged-in user
   Future<void> _fetchFileMetadata() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
     try {
-      QuerySnapshot snapshot = await FirebaseFirestore.instance.collection('files').get();
+      final snapshot = await _firestore
+          .collection('fileLinks')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+
       setState(() {
-        _fileMetadata = snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+        _fileMetadata = snapshot.docs
+            .map((doc) => {
+          'id': doc.id,
+          ...doc.data(),
+        })
+            .toList();
       });
     } catch (e) {
       print('Error fetching file metadata: $e');
     }
   }
 
-  // Pick and copy a file to local storage and save metadata to Firestore
-  Future<void> _pickAndCopyFile() async {
+  // Select a file and save its path in Firestore
+  Future<void> _selectAndSaveFile() async {
     final result = await FilePicker.platform.pickFiles();
     if (result != null && result.files.single.path != null) {
-      final selectedFile = File(result.files.single.path!);
-      final appDir = await getApplicationDocumentsDirectory();
-      final targetDir = Directory('${appDir.path}/files');
-      if (!await targetDir.exists()) {
-        await targetDir.create(recursive: true);
-      }
+      final selectedFilePath = result.files.single.path!;
+      final fileName = result.files.single.name;
+      final user = _auth.currentUser;
 
-      final targetPath = '${targetDir.path}/${selectedFile.uri.pathSegments.last}';
-      final copiedFile = await selectedFile.copy(targetPath);
+      if (user == null) return;
 
-      // Save file metadata to Firestore
-      await FirebaseFirestore.instance.collection('files').add({
-        'name': copiedFile.uri.pathSegments.last,
-        'path': copiedFile.path,
-        'uploaded_at': Timestamp.now(),
-      });
+      try {
+        final fileMetadata = {
+          'name': fileName,
+          'path': selectedFilePath,
+          'uploadedAt': Timestamp.now(),
+          'userId': user.uid,
+        };
 
-      setState(() {
-        _files.add(copiedFile);
-        _fileMetadata.add({
-          'name': copiedFile.uri.pathSegments.last,
-          'path': copiedFile.path,
-          'uploaded_at': Timestamp.now(),
+        // Save metadata to Firestore
+        final docRef = await _firestore.collection('fileLinks').add(fileMetadata);
+
+        setState(() {
+          _fileMetadata.add({
+            'id': docRef.id,
+            ...fileMetadata,
+          });
         });
-      });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('File link saved successfully!')),
+        );
+      } catch (e) {
+        print('Error saving file link: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error saving file link.')),
+        );
+      }
     }
   }
 
-  // Open a file
-  void _openFile(File file) {
-    OpenFile.open(file.path);
+  // Open a file using its path
+  Future<void> _openFile(String path) async {
+    try {
+      final result = await OpenFile.open(path);
+      if (result.type != ResultType.done) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error opening file.')),
+        );
+      }
+    } catch (e) {
+      print('Error opening file: $e');
+    }
   }
 
-  // Delete a file and its metadata
-  void _deleteFile(File file) async {
-    if (await file.exists()) {
-      await file.delete();
-
-      // Delete file metadata from Firestore
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('files')
-          .where('path', isEqualTo: file.path)
-          .get();
-
-      for (var doc in querySnapshot.docs) {
-        await doc.reference.delete();
-      }
+  // Delete a file link
+  Future<void> _deleteFile(String fileId) async {
+    try {
+      await _firestore.collection('fileLinks').doc(fileId).delete();
 
       setState(() {
-        _files.remove(file);
-        _fileMetadata.removeWhere((meta) => meta['path'] == file.path);
+        _fileMetadata.removeWhere((file) => file['id'] == fileId);
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('File link deleted successfully!')),
+      );
+    } catch (e) {
+      print('Error deleting file link: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error deleting file link.')),
+      );
     }
   }
 
@@ -120,87 +127,29 @@ class _FileManagementState extends State<FileManagement> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('자료 관리'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('자료 관리'),
-        leading: Builder(
-          builder: (context) {
-            return IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer(); // 사이드 메뉴 열기
-              },
-            );
-          },
-        ),
         actions: [
           IconButton(
-            onPressed: () {}, // 로그아웃 동작 추가 가능
-            icon: const Icon(Icons.logout),
+            onPressed: _selectAndSaveFile,
+            icon: const Icon(Icons.add),
           ),
         ],
       ),
-      drawer: const SideMenu(), // 사이드 메뉴 추가
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: 20, // 예시 데이터 개수
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text(
-                    '파일 ${index + 1}', // 리스트 항목 텍스트
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                );
-              },
+      body: _fileMetadata.isEmpty
+          ? const Center(child: Text('No files found.'))
+          : ListView.builder(
+        itemCount: _fileMetadata.length,
+        itemBuilder: (context, index) {
+          final file = _fileMetadata[index];
+          return ListTile(
+            title: Text(file['name']),
+            subtitle: Text('Path: ${file['path']}'),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => _deleteFile(file['id']),
             ),
-          ),
-          Container(
-            height: 50,
-            color: Colors.grey,
-            alignment: Alignment.center,
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: Theme.of(context).colorScheme.surface,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: () {}, // 검색 버튼 동작 추가 가능
-                icon: const Icon(Icons.search),
-              ),
-              Expanded(
-                child: TextField(
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: '검색',
-                  ),
-                  controller: _searchController,
-                  onChanged: (value) {
-                    // Implement search functionality
-                    setState(() {
-                      if (value.isEmpty) {
-                        _initializeFiles();
-                        _fetchFileMetadata();
-                      } else {
-                        _files = _files.where((file) => file.uri.pathSegments.last.contains(value)).toList();
-                      }
-                    });
-                  },
-                ),
-              ),
-              IconButton(
-                onPressed: () {}, // 파일 추가 버튼 동작 추가 가능
-                icon: const Icon(Icons.add),
-              ),
-            ],
-          ),
-        ),
+            onTap: () => _openFile(file['path']),
+          );
+        },
       ),
     );
   }
