@@ -1,5 +1,5 @@
+// AddPage.dart
 import 'dart:async';
-
 import 'package:appproject/SideMenu.dart';
 import 'package:flutter/material.dart';
 import 'TaskManager.dart';
@@ -104,6 +104,14 @@ class _AddPageState extends State<AddPage> {
               Tab(text: '과거기록'),
             ],
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back), // 뒤로가기 버튼 아이콘
+              onPressed: () {
+                Navigator.pop(context); // 이전 화면으로 돌아가기
+              },
+            ),
+          ],
         ),
         drawer: SideMenu(),
         body: TabBarView(
@@ -275,6 +283,11 @@ class _AddPageState extends State<AddPage> {
           onDismissed: (direction) async {
             try {
               await _taskManager.deleteTask(task.id);
+
+              setState(() {
+                _incompleteTasks.removeAt(index); // 데이터와 UI 동기화
+              });
+
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Task "${task.title}" deleted.')),
               );
@@ -284,6 +297,12 @@ class _AddPageState extends State<AddPage> {
               );
             }
           },
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.centerLeft,
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Icon(Icons.delete, color: Colors.white),
+          ),
           child: ListTile(
             title: Text("${task.title} - ($formattedDate 미완성)"),
             leading: const Icon(Icons.task),
@@ -295,6 +314,7 @@ class _AddPageState extends State<AddPage> {
       onReorder: _reorderIncompleteTasks,
     );
   }
+
 
   Widget _buildPastTaskList(List<Task> pastTasks) {
     return ReorderableListView.builder(
@@ -338,14 +358,23 @@ class _AddPageState extends State<AddPage> {
       _formKey.currentState?.save();
       try {
         final userName = await _taskManager.currentUserName;
+
+        // 중복 이름 확인
+        final isDuplicate = _tasks.any((task) => task.title == _taskName);
+
+        if (isDuplicate) {
+          _taskName += '-중복'; // 중복일 경우 이름 뒤에 "-중복" 추가
+        }
+
+        // 데이터베이스에 추가
         await _taskManager.addToTaskList(_taskName, userName);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Task added successfully!')),
+          SnackBar(content: Text('Task "$_taskName" added successfully!')),
         );
 
         setState(() {
-          _taskName = "";
+          _taskName = ""; // 입력 폼 초기화
         });
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -354,6 +383,7 @@ class _AddPageState extends State<AddPage> {
       }
     }
   }
+
 
   Future<void> _addTaskToDate(Task task) async {
     try {

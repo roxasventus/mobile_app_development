@@ -1,5 +1,6 @@
-//import 'package:appproject/FeedBackPage.dart';
-//import 'package:appproject/FileManagement.dart';
+// SideMenu.dart
+import 'package:appproject/FeedBackPage.dart';
+import 'package:appproject/FileManagement.dart';
 import 'package:flutter/material.dart';
 import 'package:appproject/TodayPage.dart';
 import 'package:appproject/WeekPage.dart';
@@ -66,7 +67,6 @@ class SideMenu extends StatelessWidget {
               );
             },
           ),
-          /*
           ListTile(
             title: const Text('피드백'),
             onTap: () {
@@ -81,12 +81,10 @@ class SideMenu extends StatelessWidget {
             onTap: () {
             Navigator.of(context).popUntil((route) => route.isFirst);
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => FileManagement()),
+                MaterialPageRoute(builder: (context) => Filemanagement()),
               );
             },
           ),
-
-           */
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout),

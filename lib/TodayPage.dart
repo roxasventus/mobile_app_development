@@ -1,3 +1,5 @@
+// TodayPage.dart
+import 'package:appproject/AddPage.dart';
 import 'package:flutter/material.dart';
 import 'TaskManager.dart';
 import 'Task.dart';
@@ -69,7 +71,12 @@ class TodayPage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () {
-          Navigator.pushNamed(context, '/Today/Add', arguments: null);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddPage(selectedDay: DateTime.now()), // 오늘 날짜를 전달
+            ),
+          );
         },
       ),
     );

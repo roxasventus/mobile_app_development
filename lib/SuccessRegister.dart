@@ -1,3 +1,4 @@
+// SuccessRegister.dart
 import 'package:appproject/TodayPage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
