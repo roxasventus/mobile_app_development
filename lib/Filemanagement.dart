@@ -2,10 +2,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:open_file/open_file.dart';
-import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'SideMenu.dart'; // 사이드 메뉴를 가져옵니다.
 
 import 'SideMenu.dart';
 import 'TaskProvider.dart';
@@ -124,40 +121,37 @@ class _FileManagementState extends State<FileManagement> {
       appBar: AppBar(
         title: const Text('자료 관리'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('자료 관리'),
         leading: Builder(
           builder: (context) {
             return IconButton(
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
               icon: const Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openDrawer(); // 사이드 메뉴 열기
+              },
             );
           },
         ),
+        actions: [
+          IconButton(
+            onPressed: () {}, // 로그아웃 동작 추가 가능
+            icon: const Icon(Icons.logout),
+          ),
+        ],
       ),
-      drawer: const SideMenu(),
+      drawer: const SideMenu(), // 사이드 메뉴 추가
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16.0),
-              itemCount: _files.length,
+              itemCount: 20, // 예시 데이터 개수
               itemBuilder: (context, index) {
-                final file = _files[index];
-                return ListTile(
-                  title: Text(file.uri.pathSegments.last),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.open_in_new, color: Colors.blue,),
-                        onPressed: () => _openFile(file),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.grey),
-                        onPressed: () => _deleteFile(file),
-                      ),
-                    ],
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    '파일 ${index + 1}', // 리스트 항목 텍스트
+                    style: const TextStyle(fontSize: 16),
                   ),
                 );
               },
@@ -167,7 +161,6 @@ class _FileManagementState extends State<FileManagement> {
             height: 50,
             color: Colors.grey,
             alignment: Alignment.center,
-            child: Text('총 파일: ${_files.length}'),
           ),
         ],
       ),
@@ -178,8 +171,8 @@ class _FileManagementState extends State<FileManagement> {
           child: Row(
             children: [
               IconButton(
-                onPressed: _pickAndCopyFile,
-                icon: const Icon(Icons.add),
+                onPressed: () {}, // 검색 버튼 동작 추가 가능
+                icon: const Icon(Icons.search),
               ),
               Expanded(
                 child: TextField(
@@ -200,6 +193,10 @@ class _FileManagementState extends State<FileManagement> {
                     });
                   },
                 ),
+              ),
+              IconButton(
+                onPressed: () {}, // 파일 추가 버튼 동작 추가 가능
+                icon: const Icon(Icons.add),
               ),
             ],
           ),

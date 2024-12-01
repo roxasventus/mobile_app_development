@@ -1,11 +1,12 @@
-import 'package:app_project/FeedBackPage.dart';
-import 'package:app_project/FileManagement.dart';
+// SideMenu.dart
+import 'package:appproject/FeedBackPage.dart';
+import 'package:appproject/FileManagement.dart';
 import 'package:flutter/material.dart';
-import 'package:app_project/TodayPage.dart';
-import 'package:app_project/WeekPage.dart';
-import 'package:app_project/DatePage.dart';
+import 'package:appproject/TodayPage.dart';
+import 'package:appproject/WeekPage.dart';
+import 'package:appproject/DatePage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:app_project/LoginPage.dart'; // LoginPage 가져오기
+import 'package:appproject/LoginPage.dart'; // LoginPage 가져오기
 
 class SideMenu extends StatelessWidget {
   const SideMenu({Key? key}) : super(key: key);
@@ -39,7 +40,9 @@ class SideMenu extends StatelessWidget {
           ListTile(
             title: const Text('오늘의 할 일 리스트'),
             onTap: () {
-              Navigator.of(context).push(
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              Navigator.pushReplacement(
+                context,
                 MaterialPageRoute(builder: (context) => TodayPage()),
               );
             },
@@ -47,7 +50,9 @@ class SideMenu extends StatelessWidget {
           ListTile(
             title: const Text('날짜별 할 일'),
             onTap: () {
-              Navigator.of(context).push(
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              Navigator.pushReplacement(
+                context,
                 MaterialPageRoute(builder: (context) => DatePage()),
               );
             },
@@ -55,7 +60,9 @@ class SideMenu extends StatelessWidget {
           ListTile(
             title: const Text('기간별 할 일'),
             onTap: () {
-              Navigator.of(context).push(
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              Navigator.pushReplacement(
+                context,
                 MaterialPageRoute(builder: (context) => WeekPage()),
               );
             },
@@ -63,6 +70,7 @@ class SideMenu extends StatelessWidget {
           ListTile(
             title: const Text('피드백'),
             onTap: () {
+            Navigator.of(context).popUntil((route) => route.isFirst);
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => FeedBackPage()),
               );
@@ -71,8 +79,9 @@ class SideMenu extends StatelessWidget {
           ListTile(
             title: const Text('공부 자료 관리'),
             onTap: () {
+            Navigator.of(context).popUntil((route) => route.isFirst);
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => FileManagement()),
+                MaterialPageRoute(builder: (context) => Filemanagement()),
               );
             },
           ),

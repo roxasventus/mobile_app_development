@@ -1,13 +1,20 @@
-// lib/ReorderableTaskList.dart
+// ReorderableTaskList.dart
 import 'package:flutter/material.dart';
-import 'task.dart';
-import 'package:provider/provider.dart';
-import 'TaskProvider.dart';
+import 'Task.dart';
 
 class ReorderableTaskList extends StatelessWidget {
-  final List<Task> tasks; // 인수 이름을 'tasks'로 변경
+  final List<Task> tasks; // List of tasks
+  final void Function(String taskId, bool isCompleted) onToggleTaskCompletion; // Callback for toggling completion
+  final void Function(String taskId) onDeleteTask; // Callback for deleting a task
+  final void Function(int oldIndex, int newIndex) onReorderTasks; // Callback for reordering tasks
 
-  const ReorderableTaskList({Key? key, required this.tasks}) : super(key: key);
+  const ReorderableTaskList({
+    Key? key,
+    required this.tasks,
+    required this.onToggleTaskCompletion,
+    required this.onDeleteTask,
+    required this.onReorderTasks,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -22,24 +29,26 @@ class ReorderableTaskList extends StatelessWidget {
             title: Text(task.title),
             leading: Checkbox(
               value: task.isCompleted,
-              onChanged: (_) {
-                Provider.of<TaskProvider>(context, listen: false)
-                    .toggleTaskCompletion(task.id);
+              onChanged: (value) {
+                if (value != null) {
+                  onToggleTaskCompletion(task.id, task.isCompleted);
+                }
               },
             ),
             trailing: Icon(Icons.drag_handle),
           ),
           onDismissed: (direction) {
-            Provider.of<TaskProvider>(context, listen: false)
-                .deleteTask(task.id);
+            onDeleteTask(task.id);
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${task.title} 삭제됨')),
+              SnackBar(content: Text('${task.title} deleted')),
             );
           },
         );
       },
       onReorder: (oldIndex, newIndex) {
-        // 재정렬 로직 추가 (Firestore에 순서를 저장하려면 추가 작업 필요)
+        // Adjust index for proper reordering
+        if (newIndex > oldIndex) newIndex -= 1;
+        onReorderTasks(oldIndex, newIndex);
       },
     );
   }

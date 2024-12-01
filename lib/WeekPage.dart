@@ -1,4 +1,5 @@
-import 'package:app_project/SideMenu.dart';
+// WeekPage.dart
+import 'package:appproject/SideMenu.dart';
 import 'package:flutter/material.dart';
 import 'main.dart';
 import 'package:table_calendar/table_calendar.dart';
