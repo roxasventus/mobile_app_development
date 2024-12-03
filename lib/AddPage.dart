@@ -4,6 +4,7 @@ import 'package:appproject/SideMenu.dart';
 import 'package:flutter/material.dart';
 import 'TaskManager.dart';
 import 'Task.dart';
+import 'package:page_flip/page_flip.dart';
 
 class AddPage extends StatefulWidget {
   final DateTime selectedDay;
@@ -18,6 +19,9 @@ class _AddPageState extends State<AddPage> {
   final TaskManager _taskManager = TaskManager();
   late DateTime _date;
   final _formKey = GlobalKey<FormState>();
+
+  final _controller = GlobalKey<PageFlipWidgetState>();
+
   String _taskName = "";
   late Stream<List<Task>> _taskStream;
   late Stream<List<Task>> _incompleteTaskStream;
@@ -139,6 +143,7 @@ class _AddPageState extends State<AddPage> {
               ],
             ),
 
+
             /// Incomplete Task Tab
             Column(
               children: [
@@ -171,7 +176,7 @@ class _AddPageState extends State<AddPage> {
                   child: _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : FutureBuilder<List<Task>>(
-                    future: _taskManager.getTasksOneWeekAgo(DateTime.now()),
+                    future: _taskManager.getTasksOneWeekAgo(_date),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
