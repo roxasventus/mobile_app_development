@@ -171,7 +171,7 @@ class _AddPageState extends State<AddPage> {
                   child: _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : FutureBuilder<List<Task>>(
-                    future: _taskManager.getTasksOneWeekAgo(DateTime.now()),
+                    future: _taskManager.getTasksOneWeekAgo(_date),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
