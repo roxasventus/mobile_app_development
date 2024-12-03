@@ -110,12 +110,13 @@ class _TodayPageState extends State<TodayPage> {
   int _start_end = 0 ;
 
   List<Color> colorList = [
-    Colors.pink.shade100,
-    Colors.lightBlueAccent.shade100,
+
     Colors.greenAccent.shade100,
+    Colors.pink.shade50,
+    Colors.yellow.shade100,
     Colors.orange.shade100,
     Colors.purple.shade100,
-    Colors.yellow.shade100,
+    Colors.lightBlueAccent.shade100,
   ];
 
 
@@ -148,7 +149,7 @@ class _TodayPageState extends State<TodayPage> {
                   height: 30,
                   child: Text(
                     DateFormat('MM월 dd일 EEEE', 'ko').format(now),
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -179,6 +180,7 @@ class _TodayPageState extends State<TodayPage> {
                               return TableRow(
                                   children: List.generate(7, (time){
                                     return Container(
+
                                       color: Colors.lightBlue.shade100,
                                       height: 30,
                                       width: 30,
@@ -300,8 +302,8 @@ class _TodayPageState extends State<TodayPage> {
                                         width: 5,
                                       )
                                           : Border.all(
-                                        color: Colors.black,  // 조건이 거짓일 때 검은색 테두리
-                                        width: 1,
+                                        color: Colors.grey.shade300,  // 조건이 거짓일 때 검은색 테두리
+                                        width: 2.5,
                                       ),
                                       //borderRadius: BorderRadius.circular(10),
                                     ),
