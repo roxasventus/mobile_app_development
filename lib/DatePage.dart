@@ -55,17 +55,14 @@ class _DatePageState extends State<DatePage> {
               firstDay: DateTime.utc(2020, 1, 1),
               lastDay: DateTime.utc(2030, 12, 31),
               focusedDay: _focusedDay,
-              selectedDayPredicate: (day) {
-                return isSameDay(_selectedDay, day);
-              },
+              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
               onDaySelected: (selectedDay, focusedDay) {
-                if (!isSameDay(_selectedDay, selectedDay)) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                  _showTasksBottomSheet(selectedDay);
-                }
+                if (!mounted) return;
+                setState(() {
+                  _selectedDay = selectedDay;
+                  _focusedDay = focusedDay;
+                });
+                _showTasksBottomSheet(selectedDay);
               },
               headerStyle: const HeaderStyle(
                 titleCentered: true,
@@ -75,7 +72,7 @@ class _DatePageState extends State<DatePage> {
                 todayDecoration: BoxDecoration(
                   color: Colors.transparent,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.purple.shade100, width: 1.5),
+                  border: Border.all(color: Colors.purple, width: 1.5),
                 ),
                 todayTextStyle: const TextStyle(
                     fontWeight: FontWeight.bold, color: Colors.grey),
@@ -103,141 +100,116 @@ class _DatePageState extends State<DatePage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        // 화면 높이의 50%를 계산
-        final double maxHeight = MediaQuery.of(context).size.height * 0.5;
+        // StreamBuilder를 사용한다고 가정 (이미 구현됨)
+        return StreamBuilder<List<Task>>(
+          stream: _taskManager.getTasksByDateStream(selectedDay),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            } else if (snapshot.hasError) {
+              return const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: Text('작업을 불러오는 중 오류가 발생했습니다.')),
+              );
+            }
 
-        return Container(
-          constraints: BoxConstraints(
-            maxHeight: maxHeight,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 드래그 핸들러
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16.0),
-                decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(2.0),
-                ),
+            final tasks = snapshot.data ?? [];
+
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.5,
               ),
-              // 선택한 날짜 표시
-              Text(
-                DateFormat('MMM d, yyyy').format(selectedDay),
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16.0),
-              // 할 일 목록 또는 빈 상태 메시지
-              Expanded(
-                child: FutureBuilder<List<Task>>(
-                  future: _taskManager.getTasksByDate(selectedDay),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return const Center(
-                          child: Text('작업을 불러오는 중 오류가 발생했습니다.'));
-                    }
-
-                    final tasks = snapshot.data ?? [];
-
-                    if (tasks.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          '할 일이 없습니다.',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      );
-                    } else {
-                      return ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius: BorderRadius.circular(2.0),
+                    ),
+                  ),
+                  Text(
+                    DateFormat('MMM d, yyyy').format(selectedDay),
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16.0),
+                  if (tasks.isEmpty)
+                    const Text(
+                      '할 일이 없습니다.',
+                      style: TextStyle(color: Colors.grey),
+                    )
+                  else
+                    Expanded(
+                      child: ListView.builder(
                         itemCount: tasks.length,
                         itemBuilder: (context, index) {
                           final task = tasks[index];
                           return ListTile(
                             leading: Checkbox(
                               value: task.isCompleted,
-                              onChanged: (bool? value) {
-                                _taskManager.toggleTaskCompletion(
-                                    task.id, task.isCompleted);
-                                setState(() {
-                                  task.isCompleted = !task.isCompleted;
-                                });
+                              onChanged: (bool? value) async {
+                                await _taskManager.toggleTaskCompletion(task.id, task.isCompleted);
+                                // StreamBuilder -> 자동 반영
                               },
                             ),
-                            title: Text(
-                              task.title,
-                              style: TextStyle(
-                                decoration: task.isCompleted
-                                    ? TextDecoration.lineThrough
-                                    : TextDecoration.none,
-                              ),
-                            ),
-                            subtitle:
-                            task.startTime != null && task.endTime != null
+                            title: Text(task.title),
+                            // 여기서 시작시간 ~ 끝시간 표시
+                            subtitle: (task.startTime != null && task.endTime != null)
                                 ? Text(
                               '시작: ${TimeOfDay.fromDateTime(task.startTime!).format(context)} - 끝: ${TimeOfDay.fromDateTime(task.endTime!).format(context)}',
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.black54),
+                              style: const TextStyle(fontSize: 12, color: Colors.black54),
                             )
                                 : null,
                             trailing: IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                // 경고 없이 즉시 삭제
-                                _taskManager.deleteTask(task.id);
-                                setState(() {});
+                              onPressed: () async {
+                                await _taskManager.deleteTask(task.id);
+                                // StreamBuilder -> 자동 반영
                               },
                             ),
-                            onTap: () {
-                              // 할 일 수정 기능을 추가할 수 있습니다.
-                            },
                           );
                         },
-                      );
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              // 좌우 버튼 (플러스 & 리스트)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  FloatingActionButton(
-                    heroTag: 'addButton',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              AddPage(selectedDay: selectedDay),
-                        ),
-                      ).then((_) {
-                        // 할 일 추가 후 리스트 새로 고침
-                        setState(() {});
-                      });
-                    },
-                    child: const Icon(Icons.add),
-                  ),
-                  FloatingActionButton(
-                    heroTag: 'listButton',
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (context) => const TodayPage()),
-                      );
-                    },
-                    child: const Icon(Icons.format_list_bulleted),
+                      ),
+                    ),
+                  const SizedBox(height: 16.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      FloatingActionButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddPage(selectedDay: selectedDay),
+                            ),
+                          );
+                        },
+                        child: const Icon(Icons.edit),
+                      ),
+                      const SizedBox(width: 100.0),
+                      FloatingActionButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => TodayPage()),
+                          );
+                        },
+                        child: const Icon(Icons.format_list_bulleted),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );

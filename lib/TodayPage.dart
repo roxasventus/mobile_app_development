@@ -5,7 +5,7 @@ import 'Task.dart';
 import 'ReorderableTaskList.dart';
 import 'SideMenu.dart';
 import 'AddPage.dart';
-import 'package:intl/intl.dart'; // 날짜 형식을 위한 패키지 임포트
+import 'package:intl/intl.dart';
 
 class TodayPage extends StatelessWidget {
   const TodayPage({super.key});
@@ -14,18 +14,18 @@ class TodayPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final taskManager = TaskManager();
 
-    // 현재 날짜를 가져와서 'x월 x일 오늘의 할일' 형식으로 변환
+    // 현재 날짜를 'x월 x일 오늘의 할일' 형식으로 변환
     String formattedDate = DateFormat('M월 d일').format(DateTime.now());
 
     // Function to reorder tasks
     void reorderTasks(List<Task> tasks, int oldIndex, int newIndex) async {
-      if (newIndex > oldIndex) newIndex -= 1; // Adjust index for reordering logic
+      if (newIndex > oldIndex) newIndex -= 1;
       final task = tasks.removeAt(oldIndex);
       tasks.insert(newIndex, task);
 
-      // Update the order in Firestore if needed
+      // Firestore의 order 업데이트
       for (int i = 0; i < tasks.length; i++) {
-        await taskManager.updateTaskOrder(tasks[i].id, i); // Implemented in TaskManager
+        await taskManager.updateTaskOrder(tasks[i].id, i);
       }
     }
 
@@ -58,13 +58,18 @@ class TodayPage extends StatelessWidget {
           if (tasks.isEmpty) {
             return const Center(child: Text('할 일이 없습니다.'));
           }
+
           return ReorderableTaskList(
             tasks: tasks,
             onToggleTaskCompletion: (taskId, currentStatus) {
+              // 체크박스 클릭 시 완료 상태 토글
               taskManager.toggleTaskCompletion(taskId, currentStatus);
+              // StreamBuilder 사용 중이므로 setState 필요 없음
             },
             onDeleteTask: (taskId) {
+              // 삭제 버튼 클릭 시 삭제
               taskManager.deleteTask(taskId);
+              // StreamBuilder 사용 중이므로 setState 필요 없음
             },
             onReorderTasks: (oldIndex, newIndex) {
               reorderTasks(tasks, oldIndex, newIndex);
@@ -78,9 +83,13 @@ class TodayPage extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AddPage(selectedDay: DateTime.now()), // 오늘 날짜를 전달
+              builder: (context) => AddPage(selectedDay: DateTime.now()),
             ),
-          );
+          ).then((_) {
+            // AddPage에서 돌아온 뒤 할 일이 추가됐을 경우,
+            // StreamBuilder가 Firestore 변경사항 감지 -> 자동 업데이트
+            // 별도 setState()나 모달 재호출 필요 없음
+          });
         },
       ),
     );

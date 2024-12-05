@@ -5,18 +5,20 @@ import 'Task.dart';
 class TaskManager {
   final CollectionReference _tasksCollection = FirebaseFirestore.instance.collection('tasks');
 
-  // 특정 날짜의 할 일 가져오기
+  // 특정 날짜의 할 일 가져오기 (로컬날짜 -> UTC 변환 후 쿼리)
   Future<List<Task>> getTasksByDate(DateTime date) async {
-    DateTime startOfDay = DateTime(date.year, date.month, date.day);
-    DateTime endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+    DateTime localStart = DateTime(date.year, date.month, date.day);
+    DateTime localEnd = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
 
-    QuerySnapshot querySnapshot = await _tasksCollection
-        .where('date', isGreaterThanOrEqualTo: startOfDay)
-        .where('date', isLessThanOrEqualTo: endOfDay)
+    DateTime startOfDayUtc = localStart.toUtc();
+    DateTime endOfDayUtc = localEnd.toUtc();
+
+    final querySnapshot = await _tasksCollection
+        .where('date', isGreaterThanOrEqualTo: startOfDayUtc)
+        .where('date', isLessThanOrEqualTo: endOfDayUtc)
         .get();
 
-    List<Task> tasks = querySnapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList();
-    return tasks;
+    return querySnapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList();
   }
 
   // 할 일 추가
@@ -34,83 +36,64 @@ class TaskManager {
     await _tasksCollection.doc(taskId).update({'isCompleted': !currentStatus});
   }
 
-  // 실시간 할 일 스트림 가져오기
+  // 오늘의 할 일 실시간 스트림
   Stream<List<Task>> fetchTasksStream() {
-    DateTime today = DateTime.now();
-    DateTime startOfDay = DateTime(today.year, today.month, today.day);
-    DateTime endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59, 999);
+    DateTime nowLocal = DateTime.now();
+    DateTime localStart = DateTime(nowLocal.year, nowLocal.month, nowLocal.day);
+    DateTime localEnd = DateTime(nowLocal.year, nowLocal.month, nowLocal.day, 23, 59, 59, 999);
+
+    DateTime startOfDayUtc = localStart.toUtc();
+    DateTime endOfDayUtc = localEnd.toUtc();
 
     return _tasksCollection
-        .where('date', isGreaterThanOrEqualTo: startOfDay)
-        .where('date', isLessThanOrEqualTo: endOfDay)
+        .where('date', isGreaterThanOrEqualTo: startOfDayUtc)
+        .where('date', isLessThanOrEqualTo: endOfDayUtc)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList());
   }
 
-  // 현재 사용자 이름 가져오기 (인증이 설정되어 있는 경우)
+  // 현재 사용자 이름 가져오기
   Future<String> get currentUserName async {
-    // 현재 사용자 이름을 가져오는 로직 구현
-    // 예시:
-    // User? user = FirebaseAuth.instance.currentUser;
-    // return user?.displayName ?? 'Unknown User';
+    // 인증 로직이 실제로 구현되어 있어야 함
     return 'User'; // 임시로 'User' 반환
   }
 
-  // 할 일 순서 업데이트 (재정렬 기능을 구현하는 경우)
+  // 할 일 순서 업데이트
   Future<void> updateTaskOrder(String taskId, int order) async {
     await _tasksCollection.doc(taskId).update({'order': order});
   }
 
-  // 지난 7일간의 모든 할 일 가져오기
-  Future<List<Task>> getTasksFromLastWeek() async {
-    DateTime now = DateTime.now();
-    DateTime oneWeekAgo = now.subtract(const Duration(days: 7));
+  // 7일 전의 할 일 가져오기 (referenceDate로부터 정확히 7일 전)
+  Future<List<Task>> getTasksSevenDaysAgo(DateTime referenceDate) async {
+    // referenceDate를 로컬로 가정, 이를 UTC로 변환
+    DateTime refLocalStart = DateTime(referenceDate.year, referenceDate.month, referenceDate.day);
+    DateTime refStartUtc = refLocalStart.toUtc();
+    DateTime sevenDaysAgoUtc = refStartUtc.subtract(const Duration(days: 7));
 
-    // 날짜의 시간 정보를 제거하여 비교
-    DateTime startDate = DateTime(oneWeekAgo.year, oneWeekAgo.month, oneWeekAgo.day);
-    DateTime endDate = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+    DateTime startOfDayUtc = DateTime.utc(sevenDaysAgoUtc.year, sevenDaysAgoUtc.month, sevenDaysAgoUtc.day);
+    DateTime endOfDayUtc = DateTime.utc(sevenDaysAgoUtc.year, sevenDaysAgoUtc.month, sevenDaysAgoUtc.day, 23, 59, 59, 999);
 
     QuerySnapshot querySnapshot = await _tasksCollection
-        .where('date', isGreaterThanOrEqualTo: startDate)
-        .where('date', isLessThanOrEqualTo: endDate)
-        .orderBy('date', descending: true)
+        .where('date', isGreaterThanOrEqualTo: startOfDayUtc)
+        .where('date', isLessThanOrEqualTo: endOfDayUtc)
         .get();
 
     List<Task> tasks = querySnapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList();
     return tasks;
   }
 
-  // 특정 날짜의 할 일 스트림 가져오기
+  // 특정 날짜의 할 일 실시간 스트림 가져오기 (Stream)
   Stream<List<Task>> getTasksByDateStream(DateTime date) {
-    DateTime startOfDay = DateTime(date.year, date.month, date.day);
-    DateTime endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+    DateTime localStart = DateTime(date.year, date.month, date.day);
+    DateTime localEnd = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+
+    DateTime startOfDayUtc = localStart.toUtc();
+    DateTime endOfDayUtc = localEnd.toUtc();
 
     return _tasksCollection
-        .where('date', isGreaterThanOrEqualTo: startOfDay)
-        .where('date', isLessThanOrEqualTo: endOfDay)
+        .where('date', isGreaterThanOrEqualTo: startOfDayUtc)
+        .where('date', isLessThanOrEqualTo: endOfDayUtc)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList());
-  }
-
-  // 할 일 완료 상태 업데이트
-  Future<void> updateTaskCompletion(String taskId, bool isCompleted) async {
-    await _tasksCollection.doc(taskId).update({'isCompleted': isCompleted});
-  }
-
-  // 7일 전의 할 일 가져오기
-  Future<List<Task>> getTasksSevenDaysAgo() async {
-    DateTime today = DateTime.now();
-    DateTime sevenDaysAgo = today.subtract(const Duration(days: 7));
-
-    DateTime startOfDay = DateTime(sevenDaysAgo.year, sevenDaysAgo.month, sevenDaysAgo.day);
-    DateTime endOfDay = DateTime(sevenDaysAgo.year, sevenDaysAgo.month, sevenDaysAgo.day, 23, 59, 59, 999);
-
-    QuerySnapshot querySnapshot = await _tasksCollection
-        .where('date', isGreaterThanOrEqualTo: startOfDay)
-        .where('date', isLessThanOrEqualTo: endOfDay)
-        .get();
-
-    List<Task> tasks = querySnapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList();
-    return tasks;
   }
 }

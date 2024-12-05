@@ -9,8 +9,8 @@ class Task {
   final DateTime date;
   final String userName;
   bool isCompleted;
-  final DateTime? startTime; // 추가된 필드
-  final DateTime? endTime;   // 추가된 필드
+  final DateTime? startTime;
+  final DateTime? endTime;
 
   Task({
     String? id,
@@ -19,35 +19,38 @@ class Task {
     required this.date,
     required this.userName,
     this.isCompleted = false,
-    this.startTime, // 초기화
-    this.endTime,   // 초기화
+    this.startTime,
+    this.endTime,
   }) : id = id ?? const Uuid().v4();
 
-  // 팩토리 생성자 이름을 fromSnapshot으로 변경
   factory Task.fromSnapshot(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    final data = doc.data() as Map<String, dynamic>;
     return Task(
-      id: doc.id,
+      id: doc.id, // Firestore 문서의 ID 사용 -> 중요!
       title: data['title'] ?? '',
       description: data['description'] ?? '',
-      date: (data['date'] as Timestamp).toDate(),
+      // Firestore에서 Timestamp는 UTC 시간. toLocal()로 로컬 변환
+      date: (data['date'] as Timestamp).toDate().toLocal(),
       userName: data['userName'] ?? '',
       isCompleted: data['isCompleted'] ?? false,
-      startTime: data['startTime'] != null ? (data['startTime'] as Timestamp).toDate() : null, // 추가
-      endTime: data['endTime'] != null ? (data['endTime'] as Timestamp).toDate() : null,       // 추가
+      startTime: data['startTime'] != null
+          ? (data['startTime'] as Timestamp).toDate().toLocal()
+          : null,
+      endTime: data['endTime'] != null
+          ? (data['endTime'] as Timestamp).toDate().toLocal()
+          : null,
     );
   }
 
-  // toMap 메서드 업데이트
   Map<String, dynamic> toMap() {
     return {
       'title': title,
       'description': description,
-      'date': Timestamp.fromDate(date),
+      'date': date.toUtc(),
       'userName': userName,
       'isCompleted': isCompleted,
-      'startTime': startTime != null ? Timestamp.fromDate(startTime!) : null, // 추가
-      'endTime': endTime != null ? Timestamp.fromDate(endTime!) : null,       // 추가
+      'startTime': startTime?.toUtc(),
+      'endTime': endTime?.toUtc(),
     };
   }
 }
