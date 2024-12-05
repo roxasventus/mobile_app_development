@@ -1,4 +1,4 @@
-// FeedBackPage.dart
+// lib/FeedBackPage.dart
 import 'package:appproject/SideMenu.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -27,10 +27,13 @@ class _FeedBackPageState extends State<FeedBackPage> {
   @override
   void initState() {
     super.initState();
-    _fetchCompletionRates(
-      _getStartOfWeek(selectedDate),
-      _getEndOfWeek(selectedDate),
-    );
+    _updateCompletionRates();
+  }
+
+  void _updateCompletionRates() {
+    final startOfWeek = _getStartOfWeek(selectedDate);
+    final endOfWeek = _getEndOfWeek(selectedDate);
+    _fetchCompletionRates(startOfWeek, endOfWeek);
   }
 
   void _fetchCompletionRates(DateTime startOfWeek, DateTime endOfWeek) async {
@@ -41,77 +44,67 @@ class _FeedBackPageState extends State<FeedBackPage> {
     final userName = userDoc.data()?['userName'];
     if (userName == null) return;
 
-    // Firestore에서 tasks 가져오기 (이제 date 대신 startTime, endTime 사용)
+    // Firestore에서 tasks 가져오기
     final tasksSnapshot = await _firestore
         .collection('tasks')
         .where('userName', isEqualTo: userName)
         .get();
 
-    // tasks: { 'isCompleted': bool, 'startTime': DateTime?, 'endTime': DateTime? }
+    // tasks: { 'isCompleted': bool, 'date': DateTime }
     final tasks = tasksSnapshot.docs.map((doc) {
       final data = doc.data() as Map<String, dynamic>;
+      final rawDate = (data['date'] as Timestamp).toDate();
+      final taskDate = _startOfDay(rawDate); // 날짜 단위로만 비교하기 위해 0시로 맞춤
+
       return {
         'isCompleted': data['isCompleted'] as bool? ?? false,
-        'startTime': data['startTime'] != null
-            ? (data['startTime'] as Timestamp).toDate()
-            : null,
-        'endTime': data['endTime'] != null
-            ? (data['endTime'] as Timestamp).toDate()
-            : null,
+        'date': taskDate,
       };
     }).toList();
 
+    // 일간 계산
+    final dailyRate = _calculateCompletionRate(
+      tasks,
+      _startOfDay(selectedDate),
+      _endOfDay(selectedDate),
+    );
+
+    // 주간 계산
+    final weeklyRate = _calculateCompletionRate(
+      tasks,
+      _startOfDay(startOfWeek),
+      _endOfDay(endOfWeek),
+    );
+
+    // 월간 계산
+    final startOfMonth = DateTime(selectedDate.year, selectedDate.month, 1);
+    // 다음달 1일에서 하루 빼면 말일이 나옴
+    final nextMonthFirst = DateTime(selectedDate.year, selectedDate.month + 1, 1);
+    final endOfMonthDate = nextMonthFirst.subtract(const Duration(days: 1));
+    final monthlyRate = _calculateCompletionRate(
+      tasks,
+      _startOfDay(startOfMonth),
+      _endOfDay(endOfMonthDate),
+    );
+
     setState(() {
-      // dailyCompletionRate
-      dailyCompletionRate = _calculateCompletionRate(
-        tasks,
-        _startOfDay(selectedDate),
-        _endOfDay(selectedDate),
-      );
-
-      // weeklyCompletionRate
-      weeklyCompletionRate = _calculateCompletionRate(
-        tasks,
-        startOfWeek,
-        endOfWeek,
-      );
-
-      // monthlyCompletionRate
-      final startOfMonth = DateTime(selectedDate.year, selectedDate.month, 1);
-      final endOfMonth = DateTime(selectedDate.year, selectedDate.month + 1, 0, 23, 59, 59, 999);
-      monthlyCompletionRate = _calculateCompletionRate(
-        tasks,
-        startOfMonth,
-        endOfMonth,
-      );
+      dailyCompletionRate = dailyRate;
+      weeklyCompletionRate = weeklyRate;
+      monthlyCompletionRate = monthlyRate;
     });
   }
 
   double _calculateCompletionRate(
       List<Map<String, dynamic>> tasks, DateTime start, DateTime end) {
-    // 주어진 기간 내에 해당하는 작업만 필터링
+    // 날짜 단위 비교를 위해 start, end 이미 _startOfDay, _endOfDay에서 처리
+    // start <= taskDate <= end
     final filteredTasks = tasks.where((task) {
-      final endTime = task['endTime'] as DateTime?;
-      final startTime = task['startTime'] as DateTime?;
-
-      // endTime 우선, 없으면 startTime 사용
-      final taskDate = endTime ?? startTime;
-
-      if (taskDate == null) {
-        // 시작/끝 시간이 전혀 없는 작업은 기간 내 포함시키지 않음
-        return false;
-      }
-
-      // 기간 내 포함 여부 확인 (start <= taskDate <= end)
-      // 기존 조건: isAfter(start) && isBefore(end)
-      // end를 포함하려면 isBefore(end.add(Duration(microseconds:1))) 하면 되지만
-      // 여기서는 strict 하게 start < taskDate < end 로 처리
-      return taskDate.isAfter(start) && taskDate.isBefore(end);
+      final taskDate = (task['date'] as DateTime);
+      return !taskDate.isBefore(start) && !taskDate.isAfter(end);
     }).toList();
 
     if (filteredTasks.isEmpty) return 0.0;
 
-    // 필터링된 작업 중 완료된 작업 수
     final completedTasks = filteredTasks.where((task) => task['isCompleted'] == true).length;
     return (completedTasks / filteredTasks.length) * 100;
   }
@@ -125,24 +118,19 @@ class _FeedBackPageState extends State<FeedBackPage> {
   }
 
   DateTime _getStartOfWeek(DateTime date) {
-    // 주 시작: 주일(일요일)기준이거나 월요일 기준인지에 따라 변동가능
-    // 여기서는 기존 코드대로 유지
+    // 주 시작일: 일요일 기준
     return date.subtract(Duration(days: (date.weekday % 7)));
   }
 
   DateTime _getEndOfWeek(DateTime date) {
-    return _getStartOfWeek(date).add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59, milliseconds: 999));
+    return _getStartOfWeek(date).add(const Duration(days: 6));
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     setState(() {
       selectedDate = selectedDay;
       weekOfYear = _calculateWeekOfYear(selectedDay);
-
-      final startOfWeek = _getStartOfWeek(selectedDay);
-      final endOfWeek = _getEndOfWeek(selectedDay);
-
-      _fetchCompletionRates(startOfWeek, endOfWeek);
+      _updateCompletionRates();
     });
   }
 
