@@ -24,9 +24,13 @@ class ReorderableTaskList extends StatelessWidget {
         final task = tasks[index];
         return Dismissible(
           key: ValueKey(task.id),
-          background: Container(color: Colors.green),
+          background: Container(color: Colors.red), // 삭제 시 배경 색상
           child: ListTile(
             title: Text(task.title),
+            subtitle: task.startTime != null && task.endTime != null
+                ? Text(
+                'Start: ${TimeOfDay.fromDateTime(task.startTime!).format(context)} - End: ${TimeOfDay.fromDateTime(task.endTime!).format(context)}')
+                : null,
             leading: Checkbox(
               value: task.isCompleted,
               onChanged: (value) {
@@ -35,7 +39,7 @@ class ReorderableTaskList extends StatelessWidget {
                 }
               },
             ),
-            trailing: Icon(Icons.drag_handle),
+            trailing: const Icon(Icons.drag_handle),
           ),
           onDismissed: (direction) {
             onDeleteTask(task.id);

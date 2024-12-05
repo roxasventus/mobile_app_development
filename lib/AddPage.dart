@@ -1,9 +1,8 @@
-// AddPage.dart
-import 'dart:async';
-import 'package:appproject/SideMenu.dart';
+// lib/AddPage.dart
 import 'package:flutter/material.dart';
 import 'TaskManager.dart';
 import 'Task.dart';
+import 'SideMenu.dart';
 
 class AddPage extends StatefulWidget {
   final DateTime selectedDay;
@@ -19,70 +18,20 @@ class _AddPageState extends State<AddPage> {
   late DateTime _date;
   final _formKey = GlobalKey<FormState>();
   String _taskName = "";
-  late Stream<List<Task>> _taskStream;
-  late Stream<List<Task>> _incompleteTaskStream;
-  late Stream<List<Task>> _pastTaskStream;
-  late StreamSubscription<List<Task>> _taskStreamSubscription;
-  late StreamSubscription<List<Task>> _incompleteTaskStreamSubscription;
-  late StreamSubscription<List<Task>> _pastTaskStreamSubscription;
-
-  List<Task> _tasks = [];
-  List<Task> _incompleteTasks = [];
-  List<Task> _pastTasks = [];
-  bool _isLoading = true;
+  DateTime? _startTime; // 추가된 필드
+  DateTime? _endTime;   // 추가된 필드
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _date = widget.selectedDay;
-
-    // Initialize streams
-    _taskStream = _taskManager.fetchTaskListStream();
-    _incompleteTaskStream = _taskManager.fetchIncompleteTasksStream();
-    _pastTaskStream = _taskManager.fetchPastTasksStream();
-    // Listen to task stream
-    _taskStreamSubscription = _taskStream.listen((taskList) {
-      setState(() {
-        _tasks = taskList;
-        _isLoading = false;
-      });
-    });
-
-    // Listen to incomplete task stream
-    _incompleteTaskStreamSubscription = _incompleteTaskStream.listen((taskList) {
-      setState(() {
-        _incompleteTasks = taskList;
-        _isLoading = false;
-      });
-    });
-
-    // Listen to past task stream
-    _pastTaskStreamSubscription = _pastTaskStream.listen((taskList) {
-      setState(() {
-        _pastTasks = taskList;
-        _isLoading = false;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    // Cancel the subscriptions
-    _taskStreamSubscription.cancel();
-    _incompleteTaskStreamSubscription.cancel();
-    _pastTaskStreamSubscription.cancel();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final Object? arguments = ModalRoute.of(context)?.settings.arguments;
-    if (arguments is DateTime) {
-      _date = arguments;
-    }
-
     return DefaultTabController(
-      length: 3,
+      length: 3, // 탭 수
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -99,9 +48,9 @@ class _AddPageState extends State<AddPage> {
           ),
           bottom: const TabBar(
             tabs: [
-              Tab(text: '할 일'),
-              Tab(text: '미완성'),
-              Tab(text: '과거기록'),
+              Tab(text: '할 일'),    // Task Tab
+              Tab(text: '미완성'),   // Incomplete Tab
+              Tab(text: '과거기록'), // Past Records Tab
             ],
           ),
           actions: [
@@ -113,79 +62,165 @@ class _AddPageState extends State<AddPage> {
             ),
           ],
         ),
-        drawer: SideMenu(),
+        drawer: const SideMenu(),
         body: TabBarView(
           children: [
-            /// Task Tab
-            Column(
-              children: [
-                const SizedBox(height: 10),
-                Text(
-                  '내가 저장한 할 일',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
+            /// 할 일 추가 탭
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  children: [
+                    // Task Name 입력 필드
+                    TextFormField(
+                      decoration: const InputDecoration(
+                        labelText: 'Task Name',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) {
+                        _taskName = value;
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a task name.';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    // 시작 시간 선택
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(_startTime == null
+                          ? 'Start Time'
+                          : 'Start: ${TimeOfDay.fromDateTime(_startTime!).format(context)}'),
+                      trailing: const Icon(Icons.access_time),
+                      onTap: () async {
+                        TimeOfDay? picked = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay.now(),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _startTime = DateTime(
+                              _date.year,
+                              _date.month,
+                              _date.day,
+                              picked.hour,
+                              picked.minute,
+                            );
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    // 끝 시간 선택
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(_endTime == null
+                          ? 'End Time'
+                          : 'End: ${TimeOfDay.fromDateTime(_endTime!).format(context)}'),
+                      trailing: const Icon(Icons.access_time),
+                      onTap: () async {
+                        TimeOfDay? picked = await showTimePicker(
+                          context: context,
+                          initialTime: _startTime != null
+                              ? TimeOfDay.fromDateTime(_startTime!)
+                              : TimeOfDay.now(),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _endTime = DateTime(
+                              _date.year,
+                              _date.month,
+                              _date.day,
+                              picked.hour,
+                              picked.minute,
+                            );
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    // 추가 버튼
+                    ElevatedButton(
+                      onPressed: _addTask,
+                      child: const Text('Add Task'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                _buildTaskForm(),
-                const SizedBox(height: 10),
-                Expanded(
-                  flex: 2,
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _buildTaskList(),
-                ),
-              ],
+              ),
             ),
 
-            /// Incomplete Task Tab
-            Column(
-              children: [
-                const SizedBox(height: 10),
-                Text(
-                  '미완성 할 일',
-                  style: const TextStyle(fontSize: 16, color: Colors.black),
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  flex: 2,
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _buildIncompleteTaskList(),
-                ),
-              ],
+            /// 미완성 할 일 탭
+            FutureBuilder<List<Task>>(
+              future: _taskManager.fetchTasksStream().first.then(
+                    (tasks) => tasks.where((task) => !task.isCompleted).toList(),
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                final tasks = snapshot.data ?? [];
+                if (tasks.isEmpty) {
+                  return const Center(child: Text('미완성 할 일이 없습니다.'));
+                }
+                return ListView.builder(
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    return ListTile(
+                      title: Text(task.title),
+                      subtitle: task.startTime != null && task.endTime != null
+                          ? Text(
+                          'Start: ${TimeOfDay.fromDateTime(task.startTime!).format(context)} - End: ${TimeOfDay.fromDateTime(task.endTime!).format(context)}')
+                          : null,
+                      trailing: IconButton(
+                        icon: const Icon(Icons.check),
+                        onPressed: () {
+                          _taskManager.toggleTaskCompletion(task.id, task.isCompleted);
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
             ),
 
-            /// Past Records Tab
-            Column(
-              children: [
-                const SizedBox(height: 10),
-                Text(
-                  '지난 주 오늘 했던 일',
-                  style: const TextStyle(fontSize: 16, color: Colors.black),
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  flex: 2,
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : FutureBuilder<List<Task>>(
-                    future: _taskManager.getTasksOneWeekAgo(_date),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                        return _buildPastTaskList(snapshot.data!);
-                      } else {
-                        return const Center(child: Text('No past tasks available.'));
-                      }
-                    },
-                  ),
-                ),
-              ],
+            /// 과거 기록 탭
+            FutureBuilder<List<Task>>(
+              future: _taskManager.getTasksOneWeekAgo(DateTime.now()),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                final tasks = snapshot.data ?? [];
+                if (tasks.isEmpty) {
+                  return const Center(child: Text('지난 주에 완료한 할 일이 없습니다.'));
+                }
+                return ListView.builder(
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    return ListTile(
+                      title: Text(task.title),
+                      subtitle: task.startTime != null && task.endTime != null
+                          ? Text(
+                          'Start: ${TimeOfDay.fromDateTime(task.startTime!).format(context)} - End: ${TimeOfDay.fromDateTime(task.endTime!).format(context)}')
+                          : null,
+                    );
+                  },
+                );
+              },
             ),
           ],
         ),
@@ -193,181 +228,37 @@ class _AddPageState extends State<AddPage> {
     );
   }
 
-  Widget _buildTaskForm() {
-    return Form(
-      key: _formKey,
-      child: Row(
-        children: [
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextFormField(
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Task Name',
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a task name.';
-                }
-                return null;
-              },
-              onSaved: (value) {
-                _taskName = value ?? "";
-              },
-              initialValue: _taskName,
-            ),
-          ),
-          const SizedBox(width: 10),
-          GestureDetector(
-            child: Container(
-              width: 80,
-              height: 50,
-              color: Colors.deepPurple,
-              alignment: Alignment.center,
-              child: const Text(
-                '+',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-            onTap: _addTask,
-          ),
-          const SizedBox(width: 10),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTaskList() {
-    return ReorderableListView.builder(
-      itemCount: _tasks.length,
-      itemBuilder: (context, index) {
-        final task = _tasks[index];
-        return Dismissible(
-          key: ValueKey('${task.id}-${task.title}'),
-          onDismissed: (direction) async {
-            try {
-              await _taskManager.deleteTask(task.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Task "${task.title}" deleted.')),
-              );
-            } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to delete task: $e')),
-              );
-            }
-          },
-          child: ListTile(
-            title: Text(task.title),
-            leading: const Icon(Icons.task),
-            trailing: const Icon(Icons.navigate_next),
-            onTap: () => _addTaskToDate(task),
-          ),
-        );
-      },
-      onReorder: _reorderTasks,
-    );
-  }
-
-  Widget _buildIncompleteTaskList() {
-    return ReorderableListView.builder(
-      itemCount: _incompleteTasks.length,
-      itemBuilder: (context, index) {
-        final task = _incompleteTasks[index];
-
-        // Formatting date as 'yyyy-MM-dd'
-        final formattedDate =
-            "${task.date.year}-${task.date.month.toString().padLeft(2, '0')}-${task.date.day.toString().padLeft(2, '0')}";
-
-        return Dismissible(
-          key: ValueKey('${task.id}-${task.title}'),
-          onDismissed: (direction) async {
-            try {
-              await _taskManager.deleteTask(task.id);
-
-              setState(() {
-                _incompleteTasks.removeAt(index); // 데이터와 UI 동기화
-              });
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Task "${task.title}" deleted.')),
-              );
-            } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to delete task: $e')),
-              );
-            }
-          },
-          background: Container(
-            color: Colors.red,
-            alignment: Alignment.centerLeft,
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Icon(Icons.delete, color: Colors.white),
-          ),
-          child: ListTile(
-            title: Text("${task.title} - ($formattedDate 미완성)"),
-            leading: const Icon(Icons.task),
-            trailing: const Icon(Icons.navigate_next),
-            onTap: () => _addTaskToDate(task),
-          ),
-        );
-      },
-      onReorder: _reorderIncompleteTasks,
-    );
-  }
-
-
-  Widget _buildPastTaskList(List<Task> pastTasks) {
-    return ReorderableListView.builder(
-      itemCount: pastTasks.length,
-      itemBuilder: (context, index) {
-        final task = pastTasks[index];
-
-        // Formatting date as 'yyyy-MM-dd'
-        final formattedDate =
-            "${task.date.year}-${task.date.month.toString().padLeft(2, '0')}-${task.date.day.toString().padLeft(2, '0')}";
-
-        return Dismissible(
-          key: ValueKey('${task.id}-${task.title}'),
-          onDismissed: (direction) async {
-            try {
-              await _taskManager.deleteTask(task.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Task "${task.title}" deleted.')),
-              );
-            } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to delete task: $e')),
-              );
-            }
-          },
-          child: ListTile(
-            title: Text("${task.title} - ($formattedDate)"),
-            leading: const Icon(Icons.task),
-            trailing: const Icon(Icons.navigate_next),
-            onTap: () => _addTaskToDate(task),
-          ),
-        );
-      },
-      onReorder: _reorderPastTasks,
-    );
-  }
-
-
   Future<void> _addTask() async {
     if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
+      if (_startTime == null || _endTime == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select start and end times.')),
+        );
+        return;
+      }
+      if (_endTime!.isBefore(_startTime!)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('End time must be after start time.')),
+        );
+        return;
+      }
+
+      setState(() {
+        _isLoading = true;
+      });
+
       try {
         final userName = await _taskManager.currentUserName;
 
-        // 중복 이름 확인
-        final isDuplicate = _tasks.any((task) => task.title == _taskName);
-
-        if (isDuplicate) {
-          _taskName += '-중복'; // 중복일 경우 이름 뒤에 "-중복" 추가
-        }
-
         // 데이터베이스에 추가
-        await _taskManager.addToTaskList(_taskName, userName);
+        final newTask = Task(
+          title: _taskName,
+          date: _date,
+          userName: userName,
+          startTime: _startTime,
+          endTime: _endTime,
+        );
+        await _taskManager.addTask(newTask);
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Task "$_taskName" added successfully!')),
@@ -375,60 +266,20 @@ class _AddPageState extends State<AddPage> {
 
         setState(() {
           _taskName = ""; // 입력 폼 초기화
+          _startTime = null; // 시작 시간 초기화
+          _endTime = null;   // 끝 시간 초기화
         });
+
+        Navigator.pop(context); // 추가 후 이전 화면으로 돌아가기
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to add task: $e')),
         );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
-  }
-
-
-  Future<void> _addTaskToDate(Task task) async {
-    try {
-      final userName = await _taskManager.currentUserName;
-      final newTask = Task(
-        title: task.title,
-        date: _date,
-        userName: userName,
-        isCompleted: false,
-      );
-      await _taskManager.addTask(newTask);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Task "${task.title}" added to ${_date.toLocal()}!')),
-      );
-    } catch (e) {
-      print('Error adding task: $e');
-    }
-  }
-
-  void _reorderTasks(int oldIndex, int newIndex) {
-    if (oldIndex < newIndex) newIndex -= 1;
-
-    setState(() {
-      final item = _tasks.removeAt(oldIndex);
-      _tasks.insert(newIndex, item);
-    });
-  }
-
-  void _reorderIncompleteTasks(int oldIndex, int newIndex) {
-    if (oldIndex < newIndex) newIndex -= 1;
-
-    setState(() {
-      final item = _incompleteTasks.removeAt(oldIndex);
-      _incompleteTasks.insert(newIndex, item);
-    });
-  }
-
-  void _reorderPastTasks(int oldIndex, int newIndex) {
-    setState(() {
-      if (oldIndex < newIndex) {
-        newIndex -= 1;
-      }
-      final task = _pastTasks.removeAt(oldIndex);
-      _pastTasks.insert(newIndex, task);
-    });
   }
 }

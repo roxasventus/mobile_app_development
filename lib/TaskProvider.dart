@@ -1,4 +1,4 @@
-// lib/TaskProvider.dart
+// TaskProvider.dart
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart'; // 추가
@@ -37,18 +37,18 @@ class TaskProvider extends ChangeNotifier {
   // 새 작업 추가
   Future<void> addTask(Task task) async {
     try {
-      await _tasksCollection.add(task.toMap());
+      await _tasksCollection.add(await task.toMap());
     } catch (e) {
       print('Error adding task: $e');
     }
   }
 
   // 작업 상태 토글
-  Future<void> toggleTaskCompletion(String id) async {
+  Future<void> toggleTaskCompletion(String id, bool currentStatus) async {
     try {
       Task? task = _tasks.firstWhereOrNull((task) => task.id == id);
       if (task != null) {
-        await _tasksCollection.doc(id).update({'isCompleted': !task.isCompleted});
+        await _tasksCollection.doc(id).update({'isCompleted': !currentStatus});
       } else {
         print('Task with id $id not found.');
         // 추가적인 처리 (예: 사용자에게 오류 메시지 표시)

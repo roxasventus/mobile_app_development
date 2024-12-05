@@ -1,10 +1,10 @@
 // TodayPage.dart
-import 'package:appproject/AddPage.dart';
 import 'package:flutter/material.dart';
 import 'TaskManager.dart';
 import 'Task.dart';
 import 'ReorderableTaskList.dart';
 import 'SideMenu.dart';
+import 'AddPage.dart';
 
 class TodayPage extends StatelessWidget {
   const TodayPage({super.key});
@@ -21,18 +21,18 @@ class TodayPage extends StatelessWidget {
 
       // Update the order in Firestore if needed
       for (int i = 0; i < tasks.length; i++) {
-        await taskManager.updateTaskOrder(tasks[i].id, i); // You'll need to implement this in TaskManager
+        await taskManager.updateTaskOrder(tasks[i].id, i); // Implemented in TaskManager
       }
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('오늘의 할 일'),
+        title: const Text('오늘의 할 일'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         leading: Builder(
           builder: (context) {
             return IconButton(
-              icon: Icon(Icons.menu),
+              icon: const Icon(Icons.menu),
               onPressed: () {
                 Scaffold.of(context).openDrawer();
               },
@@ -40,19 +40,19 @@ class TodayPage extends StatelessWidget {
           },
         ),
       ),
-      drawer: SideMenu(),
+      drawer: const SideMenu(),
       body: StreamBuilder<List<Task>>(
         stream: taskManager.fetchTasksStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error loading tasks'));
+            return const Center(child: Text('Error loading tasks'));
           }
           final tasks = snapshot.data ?? [];
           if (tasks.isEmpty) {
-            return Center(child: Text('할 일이 없습니다.'));
+            return const Center(child: Text('할 일이 없습니다.'));
           }
           return ReorderableTaskList(
             tasks: tasks,
@@ -69,7 +69,7 @@ class TodayPage extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         onPressed: () {
           Navigator.push(
             context,

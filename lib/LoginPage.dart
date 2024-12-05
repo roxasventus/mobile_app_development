@@ -12,9 +12,9 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login'),
+        title: const Text('Login'),
       ),
-      body: LoginForm(),
+      body: const LoginForm(),
     );
   }
 }
@@ -48,6 +48,16 @@ class _LoginFormState extends State<LoginForm> {
                 onChanged: (value) {
                   email = value;
                 },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email.';
+                  }
+                  // 간단한 이메일 형식 검증
+                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                    return 'Please enter a valid email address.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 20),
               TextFormField(
@@ -55,6 +65,15 @@ class _LoginFormState extends State<LoginForm> {
                 decoration: const InputDecoration(labelText: 'Password'),
                 onChanged: (value) {
                   password = value;
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your password.';
+                  }
+                  if (value.length < 6) {
+                    return 'Password must be at least 6 characters long.';
+                  }
+                  return null;
                 },
               ),
               const SizedBox(height: 20),
@@ -96,7 +115,7 @@ class _LoginFormState extends State<LoginForm> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => RegisterPage()),
+                        MaterialPageRoute(builder: (context) => const RegisterPage()),
                       );
                     },
                     child: const Text('Register your email'),
