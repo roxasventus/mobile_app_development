@@ -20,13 +20,17 @@ class _AddPageState extends State<AddPage> {
   final _formKey = GlobalKey<FormState>();
   String _taskName = "";
   DateTime? _startTime; // 추가된 필드
-  DateTime? _endTime; // 추가된 필드
+  DateTime? _endTime;   // 추가된 필드
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _date = widget.selectedDay;
+
+    // 기본 시간 설정: 00시 00분 - 00시 10분
+    _startTime = DateTime(_date.year, _date.month, _date.day, 0, 0);
+    _endTime = DateTime(_date.year, _date.month, _date.day, 0, 10);
   }
 
   // 시간을 10분 단위로 반올림하는 함수
@@ -109,9 +113,7 @@ class _AddPageState extends State<AddPage> {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(
-                        _startTime == null
-                            ? '시작'
-                            : '시작: ${TimeOfDay.fromDateTime(_startTime!).format(context)}',
+                        '시작: ${TimeOfDay.fromDateTime(_startTime!).format(context)}',
                         style: const TextStyle(fontSize: 16),
                       ),
                       trailing: Icon(
@@ -122,7 +124,7 @@ class _AddPageState extends State<AddPage> {
                       onTap: () async {
                         TimeOfDay? picked = await showTimePicker(
                           context: context,
-                          initialTime: TimeOfDay.now(),
+                          initialTime: TimeOfDay.fromDateTime(_startTime!),
                         );
                         if (picked != null) {
                           DateTime selectedTime = DateTime(
@@ -134,6 +136,10 @@ class _AddPageState extends State<AddPage> {
                           );
                           setState(() {
                             _startTime = _roundToNearestTen(selectedTime);
+                            // 끝 시간이 시작 시간보다 앞서면 끝 시간을 조정
+                            if (_endTime!.isBefore(_startTime!)) {
+                              _endTime = _startTime!.add(const Duration(minutes: 10));
+                            }
                           });
                         }
                       },
@@ -143,9 +149,7 @@ class _AddPageState extends State<AddPage> {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(
-                        _endTime == null
-                            ? '끝'
-                            : '끝: ${TimeOfDay.fromDateTime(_endTime!).format(context)}',
+                        '끝: ${TimeOfDay.fromDateTime(_endTime!).format(context)}',
                         style: const TextStyle(fontSize: 16),
                       ),
                       trailing: Icon(
@@ -156,9 +160,7 @@ class _AddPageState extends State<AddPage> {
                       onTap: () async {
                         TimeOfDay? picked = await showTimePicker(
                           context: context,
-                          initialTime: _startTime != null
-                              ? TimeOfDay.fromDateTime(_startTime!)
-                              : TimeOfDay.now(),
+                          initialTime: TimeOfDay.fromDateTime(_endTime!),
                         );
                         if (picked != null) {
                           DateTime selectedTime = DateTime(
@@ -179,8 +181,7 @@ class _AddPageState extends State<AddPage> {
                     ElevatedButton(
                       onPressed: _addTask,
                       style: ElevatedButton.styleFrom(
-                        padding:
-                        const EdgeInsets.symmetric(vertical: 16.0),
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
                         textStyle: const TextStyle(fontSize: 18),
                       ),
                       child: const Text('할일 추가'),
@@ -193,23 +194,18 @@ class _AddPageState extends State<AddPage> {
             /// 미완성 할 일 탭
             FutureBuilder<List<Task>>(
               future: _taskManager.fetchTasksStream().first.then(
-                    (tasks) =>
-                    tasks.where((task) => !task.isCompleted).toList(),
+                    (tasks) => tasks.where((task) => !task.isCompleted).toList(),
               ),
               builder: (context, snapshot) {
-                if (snapshot.connectionState ==
-                    ConnectionState.waiting) {
-                  return const Center(
-                      child: CircularProgressIndicator());
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Center(
-                      child: Text('Error: ${snapshot.error}'));
+                  return Center(child: Text('Error: ${snapshot.error}'));
                 }
                 final tasks = snapshot.data ?? [];
                 if (tasks.isEmpty) {
-                  return const Center(
-                      child: Text('미완성 할 일이 없습니다.'));
+                  return const Center(child: Text('미완성 할 일이 없습니다.'));
                 }
                 return ListView.builder(
                   itemCount: tasks.length,
@@ -217,8 +213,7 @@ class _AddPageState extends State<AddPage> {
                     final task = tasks[index];
                     return ListTile(
                       title: Text(task.title),
-                      subtitle:
-                      task.startTime != null && task.endTime != null
+                      subtitle: task.startTime != null && task.endTime != null
                           ? Text(
                         '시작: ${TimeOfDay.fromDateTime(task.startTime!).format(context)} - 끝: ${TimeOfDay.fromDateTime(task.endTime!).format(context)}',
                       )
@@ -232,22 +227,17 @@ class _AddPageState extends State<AddPage> {
 
             /// 과거 기록 탭
             FutureBuilder<List<Task>>(
-              future:
-              _taskManager.getTasksOneWeekAgo(DateTime.now()),
+              future: _taskManager.getTasksSevenDaysAgo(),
               builder: (context, snapshot) {
-                if (snapshot.connectionState ==
-                    ConnectionState.waiting) {
-                  return const Center(
-                      child: CircularProgressIndicator());
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Center(
-                      child: Text('Error: ${snapshot.error}'));
+                  return Center(child: Text('Error: ${snapshot.error}'));
                 }
                 final tasks = snapshot.data ?? [];
                 if (tasks.isEmpty) {
-                  return const Center(
-                      child: Text('지난주에 등록된 할 일이 없습니다.'));
+                  return const Center(child: Text('7일 전에 등록된 할 일이 없습니다.'));
                 }
                 return ListView.builder(
                   itemCount: tasks.length,
@@ -255,53 +245,57 @@ class _AddPageState extends State<AddPage> {
                     final task = tasks[index];
                     return ListTile(
                       title: Text(task.title),
-                      subtitle:
-                      task.startTime != null && task.endTime != null
+                      subtitle: task.startTime != null && task.endTime != null
                           ? Text(
                         '시작: ${TimeOfDay.fromDateTime(task.startTime!).format(context)} - 끝: ${TimeOfDay.fromDateTime(task.endTime!).format(context)}',
                       )
                           : null,
-                      onTap: () async {
-                        // 해당 할 일을 선택된 날짜로 추가
-                        try {
-                          final userName =
-                          await _taskManager.currentUserName;
-                          final selectedDate = _date;
-                          final newTask = Task(
-                            title: task.title,
-                            date: selectedDate,
-                            userName: userName,
-                            startTime: task.startTime != null
-                                ? DateTime(
-                              selectedDate.year,
-                              selectedDate.month,
-                              selectedDate.day,
-                              task.startTime!.hour,
-                              task.startTime!.minute,
-                            )
-                                : null,
-                            endTime: task.endTime != null
-                                ? DateTime(
-                              selectedDate.year,
-                              selectedDate.month,
-                              selectedDate.day,
-                              task.endTime!.hour,
-                              task.endTime!.minute,
-                            )
-                                : null,
-                          );
-                          await _taskManager.addTask(newTask);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
+                      trailing: IconButton(
+                        icon: const Icon(Icons.add, color: Colors.blue),
+                        onPressed: () async {
+                          // 해당 할 일을 선택된 날짜로 추가
+                          try {
+                            final userName = await _taskManager.currentUserName;
+                            final selectedDate = _date;
+                            final newTask = Task(
+                              title: task.title,
+                              date: selectedDate,
+                              userName: userName,
+                              startTime: task.startTime != null
+                                  ? DateTime(
+                                selectedDate.year,
+                                selectedDate.month,
+                                selectedDate.day,
+                                task.startTime!.hour,
+                                task.startTime!.minute,
+                              )
+                                  : null,
+                              endTime: task.endTime != null
+                                  ? DateTime(
+                                selectedDate.year,
+                                selectedDate.month,
+                                selectedDate.day,
+                                task.endTime!.hour,
+                                task.endTime!.minute,
+                              )
+                                  : null,
+                            );
+                            await _taskManager.addTask(newTask);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
                                 content: Text(
-                                    '할일 "${task.title}"이 ${DateFormat('M월 d일').format(selectedDate)}의 할 일에 추가되었습니다.')),
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('할일 추가에 실패했습니다: $e')),
-                          );
-                        }
-                      },
+                                  '할일 "${task.title}"이 ${DateFormat('M월 d일').format(selectedDate)}의 할 일에 추가되었습니다.',
+                                ),
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('할일 추가에 실패했습니다: $e')),
+                            );
+                          }
+                        },
+                      ),
+                      // onTap 이벤트를 제거하거나 다른 동작으로 변경
                     );
                   },
                 );
@@ -315,17 +309,10 @@ class _AddPageState extends State<AddPage> {
 
   Future<void> _addTask() async {
     if (_formKey.currentState?.validate() ?? false) {
-      if (_startTime == null || _endTime == null) {
+      // 최소 시간 검증
+      if (_endTime!.difference(_startTime!).inMinutes < 10) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('시작 시간과 끝 시간을 선택해주세요.')),
-        );
-        return;
-      }
-      if (_endTime!.isBefore(_startTime!)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('끝 시간은 시작 시간 이후여야 합니다.')),
+          const SnackBar(content: Text('최소 시간은 10분 이상이어야 합니다.')),
         );
         return;
       }
@@ -337,10 +324,13 @@ class _AddPageState extends State<AddPage> {
       try {
         final userName = await _taskManager.currentUserName;
 
+        // 날짜의 시간 정보를 제거하여 저장
+        final taskDate = DateTime(_date.year, _date.month, _date.day);
+
         // 데이터베이스에 추가
         final newTask = Task(
           title: _taskName,
-          date: DateTime(_date.year, _date.month, _date.day),
+          date: taskDate,
           userName: userName,
           startTime: _startTime,
           endTime: _endTime,
@@ -348,14 +338,14 @@ class _AddPageState extends State<AddPage> {
         await _taskManager.addTask(newTask);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('할일 "$_taskName"이 성공적으로 추가되었습니다!')),
+          SnackBar(content: Text('할일 "$_taskName"이 성공적으로 추가되었습니다!')),
         );
 
         setState(() {
           _taskName = ""; // 입력 폼 초기화
-          _startTime = null; // 시작 시간 초기화
-          _endTime = null; // 끝 시간 초기화
+          // 기본 시간으로 재설정
+          _startTime = DateTime(_date.year, _date.month, _date.day, 0, 0);
+          _endTime = DateTime(_date.year, _date.month, _date.day, 0, 10);
         });
 
         Navigator.pop(context); // 추가 후 이전 화면으로 돌아가기

@@ -61,13 +61,49 @@ class TaskManager {
     await _tasksCollection.doc(taskId).update({'order': order});
   }
 
-  // 일주일 전의 할 일 가져오기
-  Future<List<Task>> getTasksOneWeekAgo(DateTime referenceDate) async {
-    DateTime oneWeekAgo = DateTime(referenceDate.year, referenceDate.month, referenceDate.day)
-        .subtract(const Duration(days: 7));
+  // 지난 7일간의 모든 할 일 가져오기
+  Future<List<Task>> getTasksFromLastWeek() async {
+    DateTime now = DateTime.now();
+    DateTime oneWeekAgo = now.subtract(const Duration(days: 7));
 
-    DateTime startOfDay = DateTime(oneWeekAgo.year, oneWeekAgo.month, oneWeekAgo.day);
-    DateTime endOfDay = DateTime(oneWeekAgo.year, oneWeekAgo.month, oneWeekAgo.day, 23, 59, 59, 999);
+    // 날짜의 시간 정보를 제거하여 비교
+    DateTime startDate = DateTime(oneWeekAgo.year, oneWeekAgo.month, oneWeekAgo.day);
+    DateTime endDate = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+
+    QuerySnapshot querySnapshot = await _tasksCollection
+        .where('date', isGreaterThanOrEqualTo: startDate)
+        .where('date', isLessThanOrEqualTo: endDate)
+        .orderBy('date', descending: true)
+        .get();
+
+    List<Task> tasks = querySnapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList();
+    return tasks;
+  }
+
+  // 특정 날짜의 할 일 스트림 가져오기
+  Stream<List<Task>> getTasksByDateStream(DateTime date) {
+    DateTime startOfDay = DateTime(date.year, date.month, date.day);
+    DateTime endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+
+    return _tasksCollection
+        .where('date', isGreaterThanOrEqualTo: startOfDay)
+        .where('date', isLessThanOrEqualTo: endOfDay)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList());
+  }
+
+  // 할 일 완료 상태 업데이트
+  Future<void> updateTaskCompletion(String taskId, bool isCompleted) async {
+    await _tasksCollection.doc(taskId).update({'isCompleted': isCompleted});
+  }
+
+  // 7일 전의 할 일 가져오기
+  Future<List<Task>> getTasksSevenDaysAgo() async {
+    DateTime today = DateTime.now();
+    DateTime sevenDaysAgo = today.subtract(const Duration(days: 7));
+
+    DateTime startOfDay = DateTime(sevenDaysAgo.year, sevenDaysAgo.month, sevenDaysAgo.day);
+    DateTime endOfDay = DateTime(sevenDaysAgo.year, sevenDaysAgo.month, sevenDaysAgo.day, 23, 59, 59, 999);
 
     QuerySnapshot querySnapshot = await _tasksCollection
         .where('date', isGreaterThanOrEqualTo: startOfDay)
