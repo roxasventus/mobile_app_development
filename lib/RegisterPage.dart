@@ -15,8 +15,15 @@ class RegisterPage extends StatelessWidget{
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Register'),
+        title: Row(
+          children: [
+            Text('회원가입 ',style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 30, color: Colors.white )),
+            Text('Register', style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf',fontSize: 15, color: Colors.white),),
+          ],
+        ),
+        backgroundColor: Colors.green.shade300,
       ),
+      backgroundColor: Colors.lightGreen.shade300,
       body: const RegisterForm(),
     );
   }
@@ -46,9 +53,32 @@ class _RegisterFormState extends State<RegisterForm>{
           key: _formKey,
           child: ListView(
             children: [
+
+
+              SizedBox(height: 20,),
+
+              Container(
+                width: 200,
+                height: 100,
+                child: Image.asset('assets/images/Pencil.png', fit: BoxFit.contain),
+              ),
+              Text('어플 이름',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 40, color: Colors.white),),
+              Text('여기에 어플 설명을 한 줄',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 20, color: Colors.white),),
+
+              SizedBox(height: 20,),
+
+
               TextFormField(
                 decoration: InputDecoration(
-                    labelText: 'Email'
+                  labelText: 'Email',
+                  labelStyle: TextStyle(
+                    fontFamily: 'mitMi.ttf.ttf', // 라벨에 적용할 글꼴
+                    fontSize: 25, // 라벨 텍스트 색상
+                  ),
                 ),
                 onChanged: (value){
                   email = value;
@@ -60,7 +90,16 @@ class _RegisterFormState extends State<RegisterForm>{
               TextFormField(
                 obscureText: true,
                 decoration: InputDecoration(
-                    labelText: 'Password'
+                  labelText: 'Password',
+                  labelStyle: TextStyle(
+                    fontFamily: 'mitMi.ttf.ttf', // 라벨에 적용할 글꼴
+                    fontSize: 25, // 라벨 텍스트 색상
+                  ),
+                ),
+                style: TextStyle(
+                  fontFamily: 'mitMi.ttf.ttf', // 입력 텍스트에 적용할 글꼴
+                  fontSize: 25,
+                  color: Colors.black, // 입력 텍스트 색상
                 ),
                 onChanged: (value){
                   password = value;
@@ -71,7 +110,16 @@ class _RegisterFormState extends State<RegisterForm>{
               ),
               TextFormField(
                 decoration: InputDecoration(
-                    labelText: 'User Name'
+                  labelText: 'User Name',
+                  labelStyle: TextStyle(
+                    fontFamily: 'mitMi.ttf.ttf', // 라벨에 적용할 글꼴
+                    fontSize: 25, // 라벨 텍스트 색상
+                  ),
+                ),
+                style: TextStyle(
+                  fontFamily: 'mitMi.ttf.ttf', // 입력 텍스트에 적용할 글꼴
+                  fontSize: 25,
+                  color: Colors.black, // 입력 텍스트 색상
                 ),
                 onChanged: (value){
                   userName = value;
@@ -101,14 +149,17 @@ class _RegisterFormState extends State<RegisterForm>{
                 catch(e){
                   print(e);
                 }
-              }, child: Text('Enter')),
+              }, child: Text('Enter',
+                style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 20, color: Colors.black),)),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Text('If you already register,'),
+                  Text('If you already register,',
+                    style: TextStyle(fontFamily: 'mitMi.ttf.ttf', fontSize: 20, color: Colors.black),),
                   TextButton(onPressed: (){
                     Navigator.pop(context);
-                  }, child: Text('log in with your email.')),
+                  }, child: Text('log in with your email.',
+                    style: TextStyle(fontFamily: 'mitMi.ttf.ttf', fontSize: 20, color: Colors.deepPurple),)),
                 ],
               ),
             ],

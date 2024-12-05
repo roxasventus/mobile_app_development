@@ -1,4 +1,4 @@
-// task.dart
+// lib/Task.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 
@@ -21,9 +21,10 @@ class Task {
     this.isCompleted = false,
     this.startTime, // 초기화
     this.endTime,   // 초기화
-  }) : id = id ?? Uuid().v4();
+  }) : id = id ?? const Uuid().v4();
 
-  factory Task.fromFirestore(DocumentSnapshot doc) {
+  // 팩토리 생성자 이름을 fromSnapshot으로 변경
+  factory Task.fromSnapshot(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return Task(
       id: doc.id,
@@ -38,7 +39,7 @@ class Task {
   }
 
   // toMap 메서드 업데이트
-  Future<Map<String, dynamic>> toMap() async {
+  Map<String, dynamic> toMap() {
     return {
       'title': title,
       'description': description,

@@ -12,9 +12,16 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: Row(
+          children: [
+            Text('로그인 ',style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 30, color: Colors.white )),
+            Text('Login', style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf',fontSize: 15, color: Colors.white),),
+          ],
+        ),
+        backgroundColor: Colors.green.shade300,
       ),
-      body: const LoginForm(),
+      backgroundColor: Colors.lightGreen.shade300,
+      body: LoginForm(),
     );
   }
 }
@@ -43,37 +50,56 @@ class _LoginFormState extends State<LoginForm> {
           key: _formKey,
           child: ListView(
             children: [
+
+              SizedBox(height: 20,),
+
+              Container(
+                width: 200,
+                height: 150,
+                child: Image.asset('assets/images/StackedBook.png', fit: BoxFit.contain),
+              ),
+              Text('어플 이름',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 40, color: Colors.white),),
+              Text('여기에 어플 설명을 한 줄',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 20, color: Colors.white),),
+
+              SizedBox(height: 20,),
+
+
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(labelText: 'Email',
+                  labelStyle: TextStyle(
+                    fontFamily: 'mitMi.ttf.ttf', // 라벨에 적용할 글꼴
+                    fontSize: 25, // 라벨 텍스트 색상
+                  ),
+                ),
+                style: TextStyle(
+                  fontFamily: 'mitMi.ttf.ttf', // 입력 텍스트에 적용할 글꼴
+                  fontSize: 25,
+                  color: Colors.black, // 입력 텍스트 색상
+                ),
                 onChanged: (value) {
                   email = value;
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email.';
-                  }
-                  // 간단한 이메일 형식 검증
-                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return 'Please enter a valid email address.';
-                  }
-                  return null;
                 },
               ),
               const SizedBox(height: 20),
               TextFormField(
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Password'),
+                decoration: const InputDecoration(labelText: 'Password',
+                  labelStyle: TextStyle(
+                    fontFamily: 'mitMi.ttf.ttf', // 라벨에 적용할 글꼴
+                    fontSize: 25, // 라벨 텍스트 색상
+                  ),
+                ),
+                style: TextStyle(
+                  fontFamily: 'mitMi.ttf.ttf', // 입력 텍스트에 적용할 글꼴
+                  fontSize: 16,
+                  color: Colors.black, // 입력 텍스트 색상
+                ),
                 onChanged: (value) {
                   password = value;
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password.';
-                  }
-                  if (value.length < 6) {
-                    return 'Password must be at least 6 characters long.';
-                  }
-                  return null;
                 },
               ),
               const SizedBox(height: 20),
@@ -105,20 +131,23 @@ class _LoginFormState extends State<LoginForm> {
                     });
                   }
                 },
-                child: const Text('Enter'),
+                child: const Text('Enter',
+                  style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 20, color: Colors.black),),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  const Text('If you did not register,'),
+                  const Text('If you did not register,',
+                    style: TextStyle(fontFamily: 'mitMi.ttf.ttf', fontSize: 20, color: Colors.black),),
                   TextButton(
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const RegisterPage()),
+                        MaterialPageRoute(builder: (context) => RegisterPage()),
                       );
                     },
-                    child: const Text('Register your email'),
+                    child: const Text('Register your email',
+                      style: TextStyle(fontFamily: 'mitMi.ttf.ttf', fontSize: 20, color: Colors.deepPurple),),
                   ),
                 ],
               ),

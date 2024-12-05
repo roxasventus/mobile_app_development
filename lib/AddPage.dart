@@ -340,7 +340,7 @@ class _AddPageState extends State<AddPage> {
         // 데이터베이스에 추가
         final newTask = Task(
           title: _taskName,
-          date: _date,
+          date: DateTime(_date.year, _date.month, _date.day),
           userName: userName,
           startTime: _startTime,
           endTime: _endTime,

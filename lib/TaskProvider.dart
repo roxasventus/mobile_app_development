@@ -26,7 +26,7 @@ class TaskProvider extends ChangeNotifier {
   Future<void> fetchTasks() async {
     try {
       _tasksCollection.snapshots().listen((snapshot) {
-        _tasks = snapshot.docs.map((doc) => Task.fromFirestore(doc)).toList();
+        _tasks = snapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList();
         notifyListeners();
       });
     } catch (e) {
