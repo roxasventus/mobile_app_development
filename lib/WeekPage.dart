@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'SideMenu.dart';
+import 'BackgroundContainer.dart'; // BackgroundContainer import 추가
 
 class WeekPage extends StatefulWidget {
   const WeekPage({super.key});
@@ -13,10 +14,10 @@ class WeekPage extends StatefulWidget {
 
 class _WeekPageState extends State<WeekPage> {
   DateTime selectedDate = DateTime.now();
-  Map<String, DateTime?> lastSelectedDates = {}; // 습관별 마지막 선택된 날짜
+  Map<String, DateTime?> lastSelectedDates = {};
   List<Map<String, dynamic>> habitList = [];
-  Map<String, int> streakCounts = {}; // 습관별 연속 일수
-  Map<String, bool> completionStatus = {}; // 체크박스 상태
+  Map<String, int> streakCounts = {};
+  Map<String, bool> completionStatus = {};
 
   @override
   void initState() {
@@ -50,87 +51,89 @@ class _WeekPageState extends State<WeekPage> {
         ),
       ),
       drawer: const SideMenu(),
-      body: Column(
-        children: [
-          TableCalendar(
-            focusedDay: selectedDate,
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2030, 12, 31),
-            selectedDayPredicate: (day) => isSameDay(day, selectedDate),
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                selectedDate = selectedDay;
-                // 습관별 마지막 선택된 날짜 업데이트
-                for (var habit in habitList) {
-                  lastSelectedDates[habit['id']] = selectedDay;
-                }
-              });
-              _fetchCompletionStatus(selectedDay);
-              _fetchStreakCounts();
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              '날짜: ${_dateString(selectedDate)}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      body: BackgroundContainer(
+        imagePath: 'assets/images/background.png', // 배경 이미지 지정
+        child: Column(
+          children: [
+            TableCalendar(
+              focusedDay: selectedDate,
+              firstDay: DateTime.utc(2020, 1, 1),
+              lastDay: DateTime.utc(2030, 12, 31),
+              selectedDayPredicate: (day) => isSameDay(day, selectedDate),
+              onDaySelected: (selectedDay, focusedDay) {
+                setState(() {
+                  selectedDate = selectedDay;
+                  for (var habit in habitList) {
+                    lastSelectedDates[habit['id']] = selectedDay;
+                  }
+                });
+                _fetchCompletionStatus(selectedDay);
+                _fetchStreakCounts();
+              },
             ),
-          ),
-          const Divider(height: 1, thickness: 1),
-          Expanded(
-            child: ReorderableListView(
-              onReorder: _onReorder,
-              children: [
-                for (int index = 0; index < habitList.length; index++)
-                  Dismissible(
-                    key: ValueKey(habitList[index]['id']),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    ),
-                    onDismissed: (direction) async {
-                      await _deleteHabit(habitList[index]['id']);
-                      setState(() {
-                        habitList.removeAt(index);
-                      });
-                    },
-                    child: Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: ListTile(
-                        title: Text(habitList[index]['name']),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '${streakCounts[habitList[index]['id']] ?? 0}일째',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.deepPurple,
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                '날짜: ${_dateString(selectedDate)}',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const Divider(height: 1, thickness: 1),
+            Expanded(
+              child: ReorderableListView(
+                onReorder: _onReorder,
+                children: [
+                  for (int index = 0; index < habitList.length; index++)
+                    Dismissible(
+                      key: ValueKey(habitList[index]['id']),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      ),
+                      onDismissed: (direction) async {
+                        await _deleteHabit(habitList[index]['id']);
+                        setState(() {
+                          habitList.removeAt(index);
+                        });
+                      },
+                      child: Card(
+                        margin: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: ListTile(
+                          title: Text(habitList[index]['name']),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${streakCounts[habitList[index]['id']] ?? 0}일째',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Checkbox(
-                              value: completionStatus[habitList[index]['id']] ?? false,
-                              onChanged: (value) {
-                                _updateCompletionStatus(
-                                  habitList[index]['id'],
-                                  selectedDate,
-                                  value!,
-                                );
-                              },
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              Checkbox(
+                                value: completionStatus[habitList[index]['id']] ?? false,
+                                onChanged: (value) {
+                                  _updateCompletionStatus(
+                                    habitList[index]['id'],
+                                    selectedDate,
+                                    value!,
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addNewHabit(context),
@@ -139,7 +142,6 @@ class _WeekPageState extends State<WeekPage> {
     );
   }
 
-  // Firestore에서 습관 리스트 가져오기
   Future<void> _fetchHabits() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -160,7 +162,6 @@ class _WeekPageState extends State<WeekPage> {
     _fetchStreakCounts();
   }
 
-  // Firestore에서 완료 상태 가져오기
   Future<void> _fetchCompletionStatus(DateTime date) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -181,7 +182,6 @@ class _WeekPageState extends State<WeekPage> {
     });
   }
 
-  // Firestore에서 연속 일수 계산
   Future<void> _fetchStreakCounts() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -218,7 +218,6 @@ class _WeekPageState extends State<WeekPage> {
     });
   }
 
-  // 체크박스 상태 업데이트
   Future<void> _updateCompletionStatus(String habitId, DateTime date, bool isDone) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -244,7 +243,6 @@ class _WeekPageState extends State<WeekPage> {
     }
   }
 
-  // 습관 삭제
   Future<void> _deleteHabit(String habitId) async {
     await FirebaseFirestore.instance.collection('habits').doc(habitId).delete();
     await FirebaseFirestore.instance
@@ -258,7 +256,6 @@ class _WeekPageState extends State<WeekPage> {
     });
   }
 
-  // 리스트 순서 변경
   Future<void> _onReorder(int oldIndex, int newIndex) async {
     if (newIndex > oldIndex) newIndex -= 1;
 
@@ -270,7 +267,6 @@ class _WeekPageState extends State<WeekPage> {
     await _updateOrderInFirestore();
   }
 
-  // Firestore에서 순서 업데이트
   Future<void> _updateOrderInFirestore() async {
     for (int i = 0; i < habitList.length; i++) {
       final habit = habitList[i];
@@ -281,7 +277,6 @@ class _WeekPageState extends State<WeekPage> {
     }
   }
 
-  // Firestore에서 새로운 습관 추가
   Future<void> _addNewHabit(BuildContext context) async {
     TextEditingController habitController = TextEditingController();
 
@@ -326,7 +321,6 @@ class _WeekPageState extends State<WeekPage> {
     );
   }
 
-  // 날짜를 문자열로 변환
   String _dateString(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }

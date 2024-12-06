@@ -5,6 +5,7 @@ import 'Task.dart';
 import 'TaskManager.dart';
 import 'SideMenu.dart';
 import 'DatePageTab.dart';
+import 'BackgroundContainer.dart'; // BackgroundContainer 임포트 추가
 
 class DatePage extends StatefulWidget {
   const DatePage({super.key});
@@ -47,50 +48,53 @@ class _DatePageState extends State<DatePage> {
         ),
       ),
       drawer: const SideMenu(),
-      body: Center(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                '$dayOfWeek, $formattedDate',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-            ),
-            TableCalendar(
-              firstDay: DateTime.utc(2020, 1, 1),
-              lastDay: DateTime.utc(2030, 12, 31),
-              focusedDay: _focusedDay,
-              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay;
-                });
-                _showTasksBottomSheet(selectedDay);
-              },
-              headerStyle: const HeaderStyle(
-                titleCentered: true,
-                formatButtonVisible: false,
-              ),
-              calendarStyle: CalendarStyle(
-                todayDecoration: BoxDecoration(
-                  color: Colors.transparent,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.purple, width: 1.5),
+      body: BackgroundContainer(
+        imagePath: 'assets/images/background.png', // 배경 이미지 경로 추가
+        child: Center(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  '$dayOfWeek, $formattedDate',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-                todayTextStyle: const TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.grey),
-                selectedDecoration: const BoxDecoration(
-                  color: Colors.purple,
-                  shape: BoxShape.circle,
-                ),
-                defaultDecoration: const BoxDecoration(shape: BoxShape.circle),
-                weekendDecoration: const BoxDecoration(shape: BoxShape.circle),
-                outsideDaysVisible: false,
               ),
-            ),
-          ],
+              TableCalendar(
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                  _showTasksBottomSheet(selectedDay);
+                },
+                headerStyle: const HeaderStyle(
+                  titleCentered: true,
+                  formatButtonVisible: false,
+                ),
+                calendarStyle: CalendarStyle(
+                  todayDecoration: BoxDecoration(
+                    color: Colors.transparent,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.purple, width: 1.5),
+                  ),
+                  todayTextStyle: const TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.grey),
+                  selectedDecoration: const BoxDecoration(
+                    color: Colors.purple,
+                    shape: BoxShape.circle,
+                  ),
+                  defaultDecoration: const BoxDecoration(shape: BoxShape.circle),
+                  weekendDecoration: const BoxDecoration(shape: BoxShape.circle),
+                  outsideDaysVisible: false,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

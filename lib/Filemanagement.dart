@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:open_file/open_file.dart';
 import 'SideMenu.dart';
+import 'BackgroundContainer.dart'; // BackgroundContainer import 추가
 
 class FileManagement extends StatefulWidget {
   const FileManagement({Key? key}) : super(key: key);
@@ -29,7 +30,6 @@ class _FileManagementState extends State<FileManagement> {
     _fetchFileMetadata();
   }
 
-  // Fetch file metadata for the logged-in user
   Future<void> _fetchFileMetadata() async {
     final user = _auth.currentUser;
     if (user == null) return;
@@ -71,15 +71,12 @@ class _FileManagementState extends State<FileManagement> {
   }
 
   void _refreshTags() {
-    // 모든 파일 태그 추출
     final tags = _fileMetadata.map((f) => f['tags'] as String).toSet();
-    // 기본 태그 추가
     tags.add('임시태그');
     tags.add('전체');
     _allTags = tags;
   }
 
-  // Dialog to enter a single tag
   Future<String> _showTagDialog() async {
     TextEditingController tagController = TextEditingController();
     final tag = await showDialog<String>(
@@ -95,7 +92,7 @@ class _FileManagementState extends State<FileManagement> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context, ''); // 취소시 빈태그
+              Navigator.pop(context, '');
             },
             child: const Text('취소'),
           ),
@@ -112,7 +109,6 @@ class _FileManagementState extends State<FileManagement> {
     return tag ?? '';
   }
 
-  // Select a file and save its path in Firestore
   Future<void> _selectAndSaveFile() async {
     final result = await FilePicker.platform.pickFiles();
     if (result != null && result.files.single.path != null) {
@@ -122,7 +118,6 @@ class _FileManagementState extends State<FileManagement> {
 
       if (user == null) return;
 
-      // Show dialog to enter tag
       final tag = await _showTagDialog();
       final finalTag = tag.isEmpty ? '임시태그' : tag;
 
@@ -135,7 +130,6 @@ class _FileManagementState extends State<FileManagement> {
           'tags': finalTag,
         };
 
-        // Save metadata to Firestore
         final docRef = await _firestore.collection('fileLinks').add(fileMetadata);
 
         setState(() {
@@ -159,7 +153,6 @@ class _FileManagementState extends State<FileManagement> {
     }
   }
 
-  // Open a file using its path
   Future<void> _openFile(String path) async {
     try {
       final result = await OpenFile.open(path);
@@ -173,7 +166,6 @@ class _FileManagementState extends State<FileManagement> {
     }
   }
 
-  // Delete a file link
   Future<void> _deleteFile(String fileId) async {
     try {
       await _firestore.collection('fileLinks').doc(fileId).delete();
@@ -181,7 +173,6 @@ class _FileManagementState extends State<FileManagement> {
       setState(() {
         _fileMetadata.removeWhere((file) => file['id'] == fileId);
         _refreshTags();
-        // 파일 삭제 시 필터를 전체로 돌린 뒤 적용
         _selectedTag = '전체';
         _applyFilter();
       });
@@ -208,7 +199,6 @@ class _FileManagementState extends State<FileManagement> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // AppBar
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         flexibleSpace: Container(
@@ -232,68 +222,70 @@ class _FileManagementState extends State<FileManagement> {
         ),
       ),
       drawer: const SideMenu(),
-      body: Column(
-        children: [
-          // 태그 선택 Dropdown
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                const Text('태그 필터: ', style: TextStyle(fontSize: 16)),
-                Expanded(
-                  child: DropdownButton<String>(
-                    isExpanded: true,
-                    value: _selectedTag,
-                    items: _allTags.map((tag) {
-                      return DropdownMenuItem<String>(
-                        value: tag,
-                        child: Text(tag),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _selectedTag = value;
-                          _applyFilter();
-                        });
-                      }
-                    },
+      body: BackgroundContainer(
+        imagePath: 'assets/images/background.png',
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  const Text('태그 필터: ', style: TextStyle(fontSize: 16)),
+                  Expanded(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: _selectedTag,
+                      items: _allTags.map((tag) {
+                        return DropdownMenuItem<String>(
+                          value: tag,
+                          child: Text(tag),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedTag = value;
+                            _applyFilter();
+                          });
+                        }
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: _filteredMetadata.isEmpty
-                ? const Center(child: Text('No files found.'))
-                : ListView.builder(
-              itemCount: _filteredMetadata.length,
-              itemBuilder: (context, index) {
-                final file = _filteredMetadata[index];
-                final tag = file['tags'] as String;
-                return ListTile(
-                  title: Text(file['name']),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Path: ${file['path']}'),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Chip(label: Text(tag)),
-                      ),
-                    ],
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () => _deleteFile(file['id']),
-                  ),
-                  onTap: () => _openFile(file['path']),
-                );
-              },
+            const Divider(height: 1),
+            Expanded(
+              child: _filteredMetadata.isEmpty
+                  ? const Center(child: Text('No files found.'))
+                  : ListView.builder(
+                itemCount: _filteredMetadata.length,
+                itemBuilder: (context, index) {
+                  final file = _filteredMetadata[index];
+                  final tag = file['tags'] as String;
+                  return ListTile(
+                    title: Text(file['name']),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Path: ${file['path']}'),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Chip(label: Text(tag)),
+                        ),
+                      ],
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () => _deleteFile(file['id']),
+                    ),
+                    onTap: () => _openFile(file['path']),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _selectAndSaveFile,

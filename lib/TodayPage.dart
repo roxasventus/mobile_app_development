@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'TaskManager.dart';
 import 'Task.dart';
 import 'ReorderableTaskList.dart';
 import 'SideMenu.dart';
 import 'AddPage.dart';
-import 'package:intl/intl.dart';
+import 'BackgroundContainer.dart';
 
 class TodayPage extends StatelessWidget {
   const TodayPage({super.key});
@@ -52,37 +53,39 @@ class TodayPage extends StatelessWidget {
         ),
       ),
       drawer: const SideMenu(),
-      body: StreamBuilder<List<Task>>(
-        stream: taskManager.getTasksByDateStream(DateTime.now()), // 로그인된 사용자의 작업만 가져옴
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return const Center(child: Text('작업을 불러오는 중 오류가 발생했습니다.'));
-          }
-          final tasks = snapshot.data ?? [];
-          if (tasks.isEmpty) {
-            return const Center(child: Text('할 일이 없습니다.'));
-          }
+      body: BackgroundContainer(
+        imagePath: 'assets/images/background.png', // 사용할 배경 이미지 경로
+        child: StreamBuilder<List<Task>>(
+          stream: taskManager.getTasksByDateStream(DateTime.now()),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return const Center(child: Text('작업을 불러오는 중 오류가 발생했습니다.'));
+            }
 
-          return ReorderableTaskList(
-            tasks: tasks,
-            onToggleTaskCompletion: (taskId, currentStatus) {
-              // 체크박스 클릭 시 완료 상태 토글
-              taskManager.toggleTaskCompletion(taskId, currentStatus);
-              // StreamBuilder 사용 중이므로 setState 필요 없음
-            },
-            onDeleteTask: (taskId) {
-              // 삭제 버튼 클릭 시 삭제
-              taskManager.deleteTask(taskId);
-              // StreamBuilder 사용 중이므로 setState 필요 없음
-            },
-            onReorderTasks: (oldIndex, newIndex) {
-              reorderTasks(tasks, oldIndex, newIndex);
-            },
-          );
-        },
+            final tasks = snapshot.data ?? [];
+            if (tasks.isEmpty) {
+              return const Center(child: Text('할 일이 없습니다.'));
+            }
+
+            return ReorderableTaskList(
+              tasks: tasks,
+              onToggleTaskCompletion: (taskId, currentStatus) {
+                // 체크박스 클릭 시 완료 상태 토글
+                taskManager.toggleTaskCompletion(taskId, currentStatus);
+              },
+              onDeleteTask: (taskId) {
+                // 삭제 버튼 클릭 시 삭제
+                taskManager.deleteTask(taskId);
+              },
+              onReorderTasks: (oldIndex, newIndex) {
+                reorderTasks(tasks, oldIndex, newIndex);
+              },
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
@@ -94,8 +97,7 @@ class TodayPage extends StatelessWidget {
             ),
           ).then((_) {
             // AddPage에서 돌아온 뒤 할 일이 추가됐을 경우,
-            // StreamBuilder가 Firestore 변경사항 감지 -> 자동 업데이트
-            // 별도 setState()나 모달 재호출 필요 없음
+            // StreamBuilder가 Firestore 변경사항을 감지 -> 자동 업데이트
           });
         },
       ),

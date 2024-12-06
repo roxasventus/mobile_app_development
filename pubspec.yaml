@@ -80,9 +80,10 @@ flutter:
   assets:
       - assets/images/Pencil.png
       - assets/images/StackedBook.png
-      - assets/images/background_grid.png
+      - assets/images/background.png
       - assets/images/sidebar_background.png
       - assets/images/topbar_background.png
+      - assets/images/background_datepageTab.png
       - assets/fonts/TmonMonsori.ttf.ttf
       - assets/fonts/TmonMonsori.otf.otf
   #   - images/a_dot_burr.jpeg

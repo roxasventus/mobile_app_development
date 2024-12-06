@@ -144,8 +144,7 @@ class _FeedBackPageState extends State<FeedBackPage> {
       ),
       drawer: const SideMenu(),
       body: BackgroundContainer(
-        imagePath: 'assets/images/background_grid.png',
-        scale: 0.1, // 이미지 살짝 확대
+        imagePath: 'assets/images/background.png',
         child: Column(
           children: <Widget>[
             TableCalendar(
@@ -169,31 +168,40 @@ class _FeedBackPageState extends State<FeedBackPage> {
                 ),
               ),
             ),
-            Container(
-              height: 50,
-              color: Colors.red.shade100.withOpacity(0.8),
-              alignment: Alignment.center,
-              child: Text(
-                '${selectedDate.month}월 간 달성률: ${monthlyCompletionRate.toStringAsFixed(1)}%',
-                style: const TextStyle(fontSize: 25),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                height: 50,
+                color: Colors.red.shade100.withOpacity(0.8),
+                alignment: Alignment.center,
+                child: Text(
+                  '${selectedDate.month}월 간 달성률: ${monthlyCompletionRate.toStringAsFixed(1)}%',
+                  style: const TextStyle(fontSize: 25),
+                ),
               ),
             ),
-            Container(
-              height: 50,
-              color: Colors.blue.shade100.withOpacity(0.8),
-              alignment: Alignment.center,
-              child: Text(
-                '${selectedDate.month}월 ${_calculateMonthWeek(selectedDate)}주 간 달성률: ${weeklyCompletionRate.toStringAsFixed(1)}%',
-                style: const TextStyle(fontSize: 25),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                height: 50,
+                color: Colors.blue.shade100.withOpacity(0.8),
+                alignment: Alignment.center,
+                child: Text(
+                  '${selectedDate.month}월 ${_calculateMonthWeek(selectedDate)}주 간 달성률: ${weeklyCompletionRate.toStringAsFixed(1)}%',
+                  style: const TextStyle(fontSize: 25),
+                ),
               ),
             ),
-            Container(
-              height: 50,
-              color: Colors.green.shade100.withOpacity(0.8),
-              alignment: Alignment.center,
-              child: Text(
-                '${selectedDate.month}/${selectedDate.day} 일간 달성률: ${dailyCompletionRate.toStringAsFixed(1)}%',
-                style: const TextStyle(fontSize: 25),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                height: 50,
+                color: Colors.green.shade100.withOpacity(0.8),
+                alignment: Alignment.center,
+                child: Text(
+                  '${selectedDate.month}/${selectedDate.day} 일간 달성률: ${dailyCompletionRate.toStringAsFixed(1)}%',
+                  style: const TextStyle(fontSize: 25),
+                ),
               ),
             ),
             const SizedBox(height: 20),

@@ -3,6 +3,7 @@ import 'SideMenu.dart';
 import 'AddPageWork.dart';
 import 'AddPageIncomplete.dart';
 import 'AddPagePast.dart';
+import 'BackgroundContainer.dart'; // BackgroundContainer 추가
 
 class AddPage extends StatelessWidget {
   const AddPage({super.key, required this.selectedDay});
@@ -44,28 +45,30 @@ class AddPage extends StatelessWidget {
               },
             ),
           ],
-          // 여기서 bottom: TabBar(...) 제거
         ),
         drawer: const SideMenu(),
-        body: Column(
-          children: [
-            const TabBar(
-              tabs: [
-                Tab(text: '할 일'),
-                Tab(text: '미완성'),
-                Tab(text: '과거기록'),
-              ],
-            ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  AddPageWork(selectedDay: selectedDay),
-                  AddPageIncomplete(),
-                  AddPagePast(selectedDay: selectedDay),
+        body: BackgroundContainer(
+          imagePath: 'assets/images/background.png', // 배경 이미지 경로
+          child: Column(
+            children: [
+              const TabBar(
+                tabs: [
+                  Tab(text: '할 일'),
+                  Tab(text: '미완성'),
+                  Tab(text: '과거기록'),
                 ],
               ),
-            ),
-          ],
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    AddPageWork(selectedDay: selectedDay),
+                    AddPageIncomplete(),
+                    AddPagePast(selectedDay: selectedDay),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
