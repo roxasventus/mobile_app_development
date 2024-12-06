@@ -45,7 +45,7 @@ class TodayPage extends StatelessWidget {
       ),
       drawer: const SideMenu(),
       body: StreamBuilder<List<Task>>(
-        stream: taskManager.fetchTasksStream(), // 로그인된 사용자의 작업만 가져옴
+        stream: taskManager.getTasksByDateStream(DateTime.now()), // 로그인된 사용자의 작업만 가져옴
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
