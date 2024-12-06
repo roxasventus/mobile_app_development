@@ -4,8 +4,6 @@ import 'AddPageWork.dart';
 import 'AddPageIncomplete.dart';
 import 'AddPagePast.dart';
 
-// 탭별 내용 분리하여 사용
-
 class AddPage extends StatelessWidget {
   const AddPage({super.key, required this.selectedDay});
   final DateTime selectedDay;
@@ -30,6 +28,14 @@ class AddPage extends StatelessWidget {
               );
             },
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context); // 이전 화면으로 이동
+              },
+            ),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: '할 일'),
