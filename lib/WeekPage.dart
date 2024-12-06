@@ -54,8 +54,8 @@ class _WeekPageState extends State<WeekPage> {
         children: [
           TableCalendar(
             focusedDay: selectedDate,
-            firstDay: DateTime.utc(2024, 1, 1),
-            lastDay: DateTime.utc(2024, 12, 31),
+            firstDay: DateTime.utc(2020, 1, 1),
+            lastDay: DateTime.utc(2030, 12, 31),
             selectedDayPredicate: (day) => isSameDay(day, selectedDate),
             onDaySelected: (selectedDay, focusedDay) {
               setState(() {
