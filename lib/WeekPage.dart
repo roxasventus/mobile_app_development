@@ -1,10 +1,8 @@
-// lib/WeekPage.dart
-import 'package:appproject/SideMenu.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // 유저 정보 가져오기 위해 필요
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart';
+import 'SideMenu.dart';
 
 class WeekPage extends StatefulWidget {
   const WeekPage({super.key});
@@ -14,195 +12,246 @@ class WeekPage extends StatefulWidget {
 }
 
 class _WeekPageState extends State<WeekPage> {
-  DateTime selectedDate = DateTime.utc(
-    DateTime.now().year,
-    DateTime.now().month,
-    DateTime.now().day,
-  );
+  DateTime selectedDate = DateTime.now();
+  List<Map<String, dynamic>> habitList = [];
+  Map<String, bool> completionStatus = {};
+  Map<String, int> streakCounts = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHabits();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('습관 트래커'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         leading: Builder(
-            builder: (context) {
-              return IconButton(
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
-                icon: const Icon(Icons.menu),
-              );
-            }
+          builder: (context) {
+            return IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
         ),
       ),
       drawer: const SideMenu(),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
+        children: [
           TableCalendar(
-            focusedDay: DateTime.now(),
+            focusedDay: selectedDate,
             firstDay: DateTime.utc(2024, 1, 1),
             lastDay: DateTime.utc(2024, 12, 31),
+            selectedDayPredicate: (day) => isSameDay(day, selectedDate),
             onDaySelected: (selectedDay, focusedDay) {
               setState(() {
                 selectedDate = selectedDay;
               });
-              _showBottomSheet(context, selectedDay);
+              _fetchCompletionStatus(selectedDay);
+              _fetchStreakCounts();
             },
           ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              '선택한 날짜: ${_dateString(selectedDate)}',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const Divider(height: 1, thickness: 1),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(8.0),
+              itemCount: habitList.length,
+              itemBuilder: (context, index) {
+                final habit = habitList[index];
+                final isDone = completionStatus[habit['id']] ?? false;
+                final streak = streakCounts[habit['id']] ?? 0;
+
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: ListTile(
+                    title: Text(habit['name']),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${streak}일째',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepPurple,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Checkbox(
+                          value: isDone,
+                          onChanged: (value) {
+                            _updateCompletionStatus(habit['id'], selectedDate, value!);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _addNewHabit(context),
+        child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _showBottomSheet(BuildContext context, DateTime selectedDay) {
-    showModalBottomSheet(
+  // Firestore에서 모든 습관 리스트 가져오기
+  Future<void> _fetchHabits() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('habits')
+        .where('userId', isEqualTo: user.uid) // UID 기준으로 필터링
+        .get();
+
+    setState(() {
+      habitList = snapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
+          .toList();
+    });
+
+    _fetchCompletionStatus(selectedDate);
+    _fetchStreakCounts();
+  }
+
+  // Firestore에서 완료 상태 업데이트
+  Future<void> _updateCompletionStatus(String habitId, DateTime date, bool isDone) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final docId = '${habitId}_${_dateString(date)}';
+
+    await FirebaseFirestore.instance.collection('completion').doc(docId).set({
+      'userId': user.uid, // UID 저장
+      'habitId': habitId,
+      'date': _dateString(date),
+      'isDone': isDone,
+    });
+
+    _fetchCompletionStatus(date);
+    _fetchStreakCounts();
+  }
+
+  // Firestore에서 선택된 날짜의 완료 상태 가져오기
+  Future<void> _fetchCompletionStatus(DateTime date) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('completion')
+        .where('userId', isEqualTo: user.uid) // UID 기준으로 필터링
+        .where('date', isEqualTo: _dateString(date))
+        .get();
+
+    final Map<String, bool> status = {};
+    for (var doc in snapshot.docs) {
+      status[doc['habitId']] = doc['isDone'] ?? false;
+    }
+
+    setState(() {
+      completionStatus = status;
+    });
+  }
+
+  // Firestore에서 선택된 날짜 기준 연속 일수 계산
+  Future<void> _fetchStreakCounts() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final Map<String, int> streakMap = {};
+
+    for (var habit in habitList) {
+      int streak = 0;
+      DateTime current = selectedDate;
+
+      while (true) {
+        final docId = '${habit['id']}_${_dateString(current)}';
+        final doc = await FirebaseFirestore.instance
+            .collection('completion')
+            .doc(docId)
+            .get();
+
+        if (doc.exists && doc.data()?['isDone'] == true) {
+          streak++;
+          current = current.subtract(const Duration(days: 1));
+        } else {
+          break;
+        }
+      }
+
+      streakMap[habit['id']] = streak;
+    }
+
+    setState(() {
+      streakCounts = streakMap;
+    });
+  }
+
+  // Firestore에서 새로운 습관 추가
+  Future<void> _addNewHabit(BuildContext context) async {
+    TextEditingController habitController = TextEditingController();
+
+    await showDialog(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-      ),
       builder: (BuildContext context) {
-        return FutureBuilder<Map<String, dynamic>>(
-          future: _getHabitData(selectedDay), // 선택한 날짜의 습관 데이터 가져오기
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-
-            bool isDone = snapshot.data?['isDone'] ?? false;
-            int streak = snapshot.data?['streak'] ?? 0;
-
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.5,
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    DateFormat('yyyy-MM-dd').format(selectedDay),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  // 현재 연속 일수 표시
-                  Text(
-                    '현재 $streak일째 지속중!',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.deepPurple),
-                  ),
-                  const SizedBox(height: 20),
-                  CheckboxListTile(
-                    title: const Text('이 날 습관 수행함'),
-                    value: isDone,
-                    onChanged: (value) async {
-                      await _setHabitDone(selectedDay, value!);
-                      // 변경사항 반영을 위해 다시 빌드
-                      setState(() {});
-                    },
-                  ),
-                  const Spacer(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      FloatingActionButton(
-                        onPressed: () {
-                          // 편집 등의 기능을 추후 구현 가능
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('편집 기능 미구현')),
-                          );
-                        },
-                        child: const Icon(Icons.edit),
-                      ),
-                      FloatingActionButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          // 다른 페이지로 이동 가능
-                          // Navigator.of(context).push(...);
-                        },
-                        child: const Icon(Icons.format_list_bulleted),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
+        return AlertDialog(
+          title: const Text('새로운 습관 추가'),
+          content: TextField(
+            controller: habitController,
+            decoration: const InputDecoration(hintText: '습관 이름'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final habitName = habitController.text.trim();
+                if (habitName.isNotEmpty) {
+                  await _saveNewHabit(habitName);
+                  Navigator.of(context).pop();
+                  _fetchHabits();
+                }
+              },
+              child: const Text('추가'),
+            ),
+          ],
         );
       },
     );
   }
 
-  // Firestore에서 해당 날짜의 습관 데이터 가져오기
-  // isDone 여부와 streak 계산 결과 반환
-  Future<Map<String, dynamic>> _getHabitData(DateTime date) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return {'isDone': false, 'streak': 0};
-    }
-
-    final userName = await _getUserName(user.uid);
-    final doc = await FirebaseFirestore.instance
-        .collection('habits')
-        .doc('${userName}_${_dateString(date)}')
-        .get();
-
-    bool isDone = doc.exists && (doc.data()?['isDone'] == true);
-    int streak = await _calculateStreak(userName, date);
-
-    return {'isDone': isDone, 'streak': streak};
-  }
-
-  // Firestore에 해당 날짜 isDone값 설정
-  Future<void> _setHabitDone(DateTime date, bool done) async {
+  // Firestore에서 새로운 습관 저장
+  Future<void> _saveNewHabit(String name) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final userName = await _getUserName(user.uid);
-    await FirebaseFirestore.instance
-        .collection('habits')
-        .doc('${userName}_${_dateString(date)}')
-        .set({
-      'userName': userName,
-      'date': DateTime(date.year, date.month, date.day),
-      'isDone': done,
+    await FirebaseFirestore.instance.collection('habits').add({
+      'userId': user.uid, // UID 저장
+      'name': name,
     });
   }
 
-  // 연속 일수 계산: 선택된 날짜로부터 과거로 거슬러 올라가며 done == true인 날을 센다.
-  Future<int> _calculateStreak(String userName, DateTime date) async {
-    int streakCount = 0;
-    DateTime current = date;
-
-    while (true) {
-      final doc = await FirebaseFirestore.instance
-          .collection('habits')
-          .doc('${userName}_${_dateString(current)}')
-          .get();
-
-      if (doc.exists && (doc.data()?['isDone'] == true)) {
-        streakCount++;
-        // 이전 날로 이동
-        current = current.subtract(const Duration(days: 1));
-      } else {
-        // done == false거나 문서 없으면 streak 중단
-        break;
-      }
-    }
-
-    return streakCount;
-  }
-
-  // UID로부터 userName 가져오는 함수 (예시용)
-  Future<String> _getUserName(String uid) async {
-    final userDoc = await FirebaseFirestore.instance.collection('user').doc(uid).get();
-    return userDoc.data()?['userName'] ?? 'UnknownUser';
-  }
-
+  // 날짜를 문자열로 변환
   String _dateString(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2,'0')}-${date.day.toString().padLeft(2,'0')}';
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 }
