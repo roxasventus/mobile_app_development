@@ -86,8 +86,6 @@ class _MemorizeSettingState extends State<MemorizeSetting> {
 
   void _onConfirm() async {
     await _saveLanguageToDB(_selectedLanguage);
-    // 설정 완료 후 홈 화면으로 돌아가기
-    Navigator.pop(context);
   }
 
   @override
