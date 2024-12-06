@@ -27,7 +27,7 @@ class _WeekPageState extends State<WeekPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('습관 트래커'),
+        title: const Text('habit tracker'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         leading: Builder(
           builder: (context) {
@@ -59,7 +59,7 @@ class _WeekPageState extends State<WeekPage> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              '선택한 날짜: ${_dateString(selectedDate)}',
+              '날짜: ${_dateString(selectedDate)}',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
