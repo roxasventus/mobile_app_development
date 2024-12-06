@@ -1,4 +1,3 @@
-// lib/DatePage.dart
 import 'package:appproject/AddPage.dart';
 import 'package:appproject/TodayPage.dart';
 import 'package:flutter/material.dart';
@@ -100,9 +99,8 @@ class _DatePageState extends State<DatePage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        // StreamBuilder를 사용한다고 가정 (이미 구현됨)
-        return StreamBuilder<List<Task>>(
-          stream: _taskManager.getTasksByDateStream(selectedDay),
+        return FutureBuilder<List<Task>>(
+          future: _taskManager.getTasksByDate(selectedDay),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Padding(
@@ -156,23 +154,22 @@ class _DatePageState extends State<DatePage> {
                             leading: Checkbox(
                               value: task.isCompleted,
                               onChanged: (bool? value) async {
-                                await _taskManager.toggleTaskCompletion(task.id, task.isCompleted);
-                                // StreamBuilder -> 자동 반영
+                                await _taskManager.toggleTaskCompletion(
+                                    task.id, task.isCompleted);
                               },
                             ),
                             title: Text(task.title),
-                            // 여기서 시작시간 ~ 끝시간 표시
                             subtitle: (task.startTime != null && task.endTime != null)
                                 ? Text(
                               '시작: ${TimeOfDay.fromDateTime(task.startTime!).format(context)} - 끝: ${TimeOfDay.fromDateTime(task.endTime!).format(context)}',
-                              style: const TextStyle(fontSize: 12, color: Colors.black54),
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.black54),
                             )
                                 : null,
                             trailing: IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
                               onPressed: () async {
                                 await _taskManager.deleteTask(task.id);
-                                // StreamBuilder -> 자동 반영
                               },
                             ),
                           );
@@ -188,7 +185,8 @@ class _DatePageState extends State<DatePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => AddPage(selectedDay: selectedDay),
+                              builder: (context) =>
+                                  AddPage(selectedDay: selectedDay),
                             ),
                           );
                         },

@@ -1,21 +1,29 @@
-// lib/TaskManager.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'Task.dart';
 
 class TaskManager {
-  final CollectionReference _tasksCollection = FirebaseFirestore.instance.collection('tasks');
+  final CollectionReference _tasksCollection =
+  FirebaseFirestore.instance.collection('tasks');
+
+  Future<String> get currentUserId async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('사용자가 로그인되어 있지 않습니다.');
+    }
+    return user.uid;
+  }
 
   Future<List<Task>> getTasksByDate(DateTime date) async {
-    DateTime localStart = DateTime(date.year, date.month, date.day);
-    DateTime localEnd = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
-
-    DateTime startOfDayUtc = localStart.toUtc();
-    DateTime endOfDayUtc = localEnd.toUtc();
+    final userId = await currentUserId;
+    DateTime startOfDay = DateTime(date.year, date.month, date.day).toUtc();
+    DateTime endOfDay =
+    DateTime(date.year, date.month, date.day, 23, 59, 59, 999).toUtc();
 
     final querySnapshot = await _tasksCollection
-        .where('date', isGreaterThanOrEqualTo: startOfDayUtc)
-        .where('date', isLessThanOrEqualTo: endOfDayUtc)
+        .where('userId', isEqualTo: userId)
+        .where('date', isGreaterThanOrEqualTo: startOfDay)
+        .where('date', isLessThanOrEqualTo: endOfDay)
         .get();
 
     return querySnapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList();
@@ -33,33 +41,19 @@ class TaskManager {
     await _tasksCollection.doc(taskId).update({'isCompleted': !currentStatus});
   }
 
-  Stream<List<Task>> fetchTasksStream() {
-    DateTime nowLocal = DateTime.now();
-    DateTime localStart = DateTime(nowLocal.year, nowLocal.month, nowLocal.day);
-    DateTime localEnd = DateTime(nowLocal.year, nowLocal.month, nowLocal.day, 23, 59, 59, 999);
+  Stream<List<Task>> fetchTasksStream() async* {
+    final userId = await currentUserId;
+    DateTime startOfDay =
+    DateTime.now().toUtc().subtract(const Duration(hours: 9));
+    DateTime endOfDay = startOfDay.add(const Duration(hours: 24));
 
-    DateTime startOfDayUtc = localStart.toUtc();
-    DateTime endOfDayUtc = localEnd.toUtc();
-
-    return _tasksCollection
-        .where('date', isGreaterThanOrEqualTo: startOfDayUtc)
-        .where('date', isLessThanOrEqualTo: endOfDayUtc)
+    yield* _tasksCollection
+        .where('userId', isEqualTo: userId)
+        .where('date', isGreaterThanOrEqualTo: startOfDay)
+        .where('date', isLessThanOrEqualTo: endOfDay)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList());
-  }
-
-  // 현재 사용자 이름 가져오기 (임시 'User' -> 실제 로직으로 수정)
-  Future<String> get currentUserName async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      // 로그인 안 된 상태
-      return 'Unknown';
-    }
-    // Firestore에서 userName 필드 가져오기
-    final userDoc = await FirebaseFirestore.instance.collection('user').doc(user.uid).get();
-    final userName = userDoc.data()?['userName'];
-
-    return userName ?? 'Unknown';
+        .map((snapshot) =>
+        snapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList());
   }
 
   Future<void> updateTaskOrder(String taskId, int order) async {
@@ -67,33 +61,46 @@ class TaskManager {
   }
 
   Future<List<Task>> getTasksSevenDaysAgo(DateTime referenceDate) async {
-    DateTime refLocalStart = DateTime(referenceDate.year, referenceDate.month, referenceDate.day);
-    DateTime refStartUtc = refLocalStart.toUtc();
-    DateTime sevenDaysAgoUtc = refStartUtc.subtract(const Duration(days: 7));
+    final userId = await currentUserId;
+    DateTime sevenDaysAgo = referenceDate.subtract(const Duration(days: 7));
+    DateTime startOfDay =
+    DateTime(sevenDaysAgo.year, sevenDaysAgo.month, sevenDaysAgo.day).toUtc();
+    DateTime endOfDay = DateTime(
+      sevenDaysAgo.year,
+      sevenDaysAgo.month,
+      sevenDaysAgo.day,
+      23,
+      59,
+      59,
+      999,
+    ).toUtc();
 
-    DateTime startOfDayUtc = DateTime.utc(sevenDaysAgoUtc.year, sevenDaysAgoUtc.month, sevenDaysAgoUtc.day);
-    DateTime endOfDayUtc = DateTime.utc(sevenDaysAgoUtc.year, sevenDaysAgoUtc.month, sevenDaysAgoUtc.day, 23, 59, 59, 999);
-
-    QuerySnapshot querySnapshot = await _tasksCollection
-        .where('date', isGreaterThanOrEqualTo: startOfDayUtc)
-        .where('date', isLessThanOrEqualTo: endOfDayUtc)
+    final querySnapshot = await _tasksCollection
+        .where('userId', isEqualTo: userId)
+        .where('date', isGreaterThanOrEqualTo: startOfDay)
+        .where('date', isLessThanOrEqualTo: endOfDay)
         .get();
 
-    List<Task> tasks = querySnapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList();
-    return tasks;
+    return querySnapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList();
   }
 
-  Stream<List<Task>> getTasksByDateStream(DateTime date) {
-    DateTime localStart = DateTime(date.year, date.month, date.day);
-    DateTime localEnd = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+  // New Method: Get All Incomplete Tasks
+  Future<List<Task>> getIncompleteTasks() async {
+    final userId = await currentUserId;
 
-    DateTime startOfDayUtc = localStart.toUtc();
-    DateTime endOfDayUtc = localEnd.toUtc();
+    final querySnapshot = await _tasksCollection
+        .where('userId', isEqualTo: userId)
+        .where('isCompleted', isEqualTo: false)
+        .get();
 
+    return querySnapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList();
+  }
+
+  Stream<List<Task>> getIncompleteTasksStream() {
     return _tasksCollection
-        .where('date', isGreaterThanOrEqualTo: startOfDayUtc)
-        .where('date', isLessThanOrEqualTo: endOfDayUtc)
+        .where('isCompleted', isEqualTo: false)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList());
+        .map((snapshot) =>
+        snapshot.docs.map((doc) => Task.fromSnapshot(doc)).toList());
   }
 }

@@ -1,4 +1,3 @@
-// lib/FeedBackPage.dart
 import 'package:appproject/SideMenu.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -18,8 +17,6 @@ class _FeedBackPageState extends State<FeedBackPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   DateTime selectedDate = DateTime.now();
-  int weekOfYear = 1;
-
   double dailyCompletionRate = 0.0;
   double weeklyCompletionRate = 0.0;
   double monthlyCompletionRate = 0.0;
@@ -30,13 +27,13 @@ class _FeedBackPageState extends State<FeedBackPage> {
     _updateCompletionRates();
   }
 
-  void _updateCompletionRates() {
+  void _updateCompletionRates() async {
     final startOfWeek = _getStartOfWeek(selectedDate);
     final endOfWeek = _getEndOfWeek(selectedDate);
-    _fetchCompletionRates(startOfWeek, endOfWeek);
+    await _fetchCompletionRates(startOfWeek, endOfWeek);
   }
 
-  void _fetchCompletionRates(DateTime startOfWeek, DateTime endOfWeek) async {
+  Future<void> _fetchCompletionRates(DateTime startOfWeek, DateTime endOfWeek) async {
     final user = _auth.currentUser;
     if (user == null) return;
 
@@ -44,17 +41,15 @@ class _FeedBackPageState extends State<FeedBackPage> {
     final userName = userDoc.data()?['userName'];
     if (userName == null) return;
 
-    // Firestore에서 tasks 가져오기
     final tasksSnapshot = await _firestore
         .collection('tasks')
         .where('userName', isEqualTo: userName)
         .get();
 
-    // tasks: { 'isCompleted': bool, 'date': DateTime }
     final tasks = tasksSnapshot.docs.map((doc) {
       final data = doc.data() as Map<String, dynamic>;
       final rawDate = (data['date'] as Timestamp).toDate();
-      final taskDate = _startOfDay(rawDate); // 날짜 단위로만 비교하기 위해 0시로 맞춤
+      final taskDate = _startOfDay(rawDate);
 
       return {
         'isCompleted': data['isCompleted'] as bool? ?? false,
@@ -62,44 +57,31 @@ class _FeedBackPageState extends State<FeedBackPage> {
       };
     }).toList();
 
-    // 일간 계산
-    final dailyRate = _calculateCompletionRate(
-      tasks,
-      _startOfDay(selectedDate),
-      _endOfDay(selectedDate),
-    );
-
-    // 주간 계산
-    final weeklyRate = _calculateCompletionRate(
-      tasks,
-      _startOfDay(startOfWeek),
-      _endOfDay(endOfWeek),
-    );
-
-    // 월간 계산
-    final startOfMonth = DateTime(selectedDate.year, selectedDate.month, 1);
-    // 다음달 1일에서 하루 빼면 말일이 나옴
-    final nextMonthFirst = DateTime(selectedDate.year, selectedDate.month + 1, 1);
-    final endOfMonthDate = nextMonthFirst.subtract(const Duration(days: 1));
-    final monthlyRate = _calculateCompletionRate(
-      tasks,
-      _startOfDay(startOfMonth),
-      _endOfDay(endOfMonthDate),
-    );
-
     setState(() {
-      dailyCompletionRate = dailyRate;
-      weeklyCompletionRate = weeklyRate;
-      monthlyCompletionRate = monthlyRate;
+      dailyCompletionRate = _calculateCompletionRate(
+        tasks,
+        _startOfDay(selectedDate),
+        _endOfDay(selectedDate),
+      );
+      weeklyCompletionRate = _calculateCompletionRate(
+        tasks,
+        _startOfDay(startOfWeek),
+        _endOfDay(endOfWeek),
+      );
+      monthlyCompletionRate = _calculateCompletionRate(
+        tasks,
+        _startOfDay(DateTime(selectedDate.year, selectedDate.month, 1)),
+        _endOfDay(
+          DateTime(selectedDate.year, selectedDate.month + 1, 0),
+        ),
+      );
     });
   }
 
   double _calculateCompletionRate(
       List<Map<String, dynamic>> tasks, DateTime start, DateTime end) {
-    // 날짜 단위 비교를 위해 start, end 이미 _startOfDay, _endOfDay에서 처리
-    // start <= taskDate <= end
     final filteredTasks = tasks.where((task) {
-      final taskDate = (task['date'] as DateTime);
+      final taskDate = task['date'] as DateTime;
       return !taskDate.isBefore(start) && !taskDate.isAfter(end);
     }).toList();
 
@@ -118,7 +100,6 @@ class _FeedBackPageState extends State<FeedBackPage> {
   }
 
   DateTime _getStartOfWeek(DateTime date) {
-    // 주 시작일: 일요일 기준
     return date.subtract(Duration(days: (date.weekday % 7)));
   }
 
@@ -129,7 +110,6 @@ class _FeedBackPageState extends State<FeedBackPage> {
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     setState(() {
       selectedDate = selectedDay;
-      weekOfYear = _calculateWeekOfYear(selectedDay);
       _updateCompletionRates();
     });
   }
@@ -198,24 +178,12 @@ class _FeedBackPageState extends State<FeedBackPage> {
     );
   }
 
-  int _calculateWeekOfYear(DateTime date) {
-    final firstDayOfYear = DateTime(date.year, 1, 1);
-    final weekDayOfFirstDay = firstDayOfYear.weekday;
-    final firstWeekStart = firstDayOfYear.add(Duration(days: (7 - weekDayOfFirstDay) % 7));
-    final daysDifference = date.difference(firstWeekStart).inDays;
-
-    return ((daysDifference) / 7).ceil() + 1;
-  }
-
   int _calculateMonthWeek(DateTime date) {
     DateTime firstDayOfMonth = DateTime(date.year, date.month, 1);
     int firstWeekday = firstDayOfMonth.weekday;
-
     DateTime firstSundayOfMonth =
     firstDayOfMonth.subtract(Duration(days: (firstWeekday % 7)));
-
     int daysDifference = date.difference(firstSundayOfMonth).inDays;
-
     return (daysDifference / 7).floor() + 1;
   }
 }

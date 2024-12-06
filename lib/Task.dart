@@ -7,7 +7,7 @@ class Task {
   final String title;
   final String description;
   final DateTime date;
-  final String userName;
+  final String userId;
   bool isCompleted;
   final DateTime? startTime;
   final DateTime? endTime;
@@ -17,7 +17,7 @@ class Task {
     required this.title,
     this.description = '',
     required this.date,
-    required this.userName,
+    required this.userId,
     this.isCompleted = false,
     this.startTime,
     this.endTime,
@@ -26,12 +26,11 @@ class Task {
   factory Task.fromSnapshot(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return Task(
-      id: doc.id, // Firestore 문서의 ID 사용 -> 중요!
+      id: doc.id,
       title: data['title'] ?? '',
       description: data['description'] ?? '',
-      // Firestore에서 Timestamp는 UTC 시간. toLocal()로 로컬 변환
       date: (data['date'] as Timestamp).toDate().toLocal(),
-      userName: data['userName'] ?? '',
+      userId: data['userId'] ?? '',
       isCompleted: data['isCompleted'] ?? false,
       startTime: data['startTime'] != null
           ? (data['startTime'] as Timestamp).toDate().toLocal()
@@ -47,7 +46,7 @@ class Task {
       'title': title,
       'description': description,
       'date': date.toUtc(),
-      'userName': userName,
+      'userId': userId,
       'isCompleted': isCompleted,
       'startTime': startTime?.toUtc(),
       'endTime': endTime?.toUtc(),

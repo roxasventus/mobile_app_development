@@ -58,7 +58,7 @@ class SideMenu extends StatelessWidget {
             },
           ),
           ListTile(
-            title: const Text('습관'),
+            title: const Text('습관ㄴ'),
             onTap: () {
               Navigator.of(context).popUntil((route) => route.isFirst);
               Navigator.pushReplacement(
