@@ -31,7 +31,15 @@ class TodayPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('$formattedDate 오늘의 할일'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/topbar_background.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
         leading: Builder(
           builder: (context) {
             return IconButton(

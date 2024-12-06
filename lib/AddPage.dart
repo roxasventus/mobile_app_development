@@ -13,10 +13,18 @@ class AddPage extends StatelessWidget {
     String formattedDate = "${selectedDay.month}월 ${selectedDay.day}일 작업 추가";
 
     return DefaultTabController(
-      length: 3, // 3개의 탭
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          backgroundColor: Colors.transparent,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/topbar_background.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
           title: Text(formattedDate),
           leading: Builder(
             builder: (context) {
@@ -32,24 +40,31 @@ class AddPage extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () {
-                Navigator.pop(context); // 이전 화면으로 이동
+                Navigator.pop(context);
               },
             ),
           ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: '할 일'),
-              Tab(text: '미완성'),
-              Tab(text: '과거기록'),
-            ],
-          ),
+          // 여기서 bottom: TabBar(...) 제거
         ),
         drawer: const SideMenu(),
-        body: TabBarView(
+        body: Column(
           children: [
-            AddPageWork(selectedDay: selectedDay),
-            AddPageIncomplete(),
-            AddPagePast(selectedDay: selectedDay),
+            const TabBar(
+              tabs: [
+                Tab(text: '할 일'),
+                Tab(text: '미완성'),
+                Tab(text: '과거기록'),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  AddPageWork(selectedDay: selectedDay),
+                  AddPageIncomplete(),
+                  AddPagePast(selectedDay: selectedDay),
+                ],
+              ),
+            ),
           ],
         ),
       ),

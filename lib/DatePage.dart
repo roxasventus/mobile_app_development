@@ -25,7 +25,15 @@ class _DatePageState extends State<DatePage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/topbar_background.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
         title: const Text('날짜별 할 일 리스트'),
         leading: Builder(
           builder: (context) {

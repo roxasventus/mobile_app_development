@@ -210,7 +210,15 @@ class _FileManagementState extends State<FileManagement> {
     return Scaffold(
       // AppBar
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/topbar_background.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
         title: const Text("자료 관리"),
         leading: Builder(
           builder: (context) {

@@ -29,7 +29,15 @@ class _WeekPageState extends State<WeekPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('habit tracker'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/topbar_background.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
         leading: Builder(
           builder: (context) {
             return IconButton(

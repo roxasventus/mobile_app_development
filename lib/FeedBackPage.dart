@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import 'BackgroundContainer.dart';
 
 class FeedBackPage extends StatefulWidget {
   const FeedBackPage({super.key});
@@ -41,7 +42,7 @@ class _FeedBackPageState extends State<FeedBackPage> {
 
     final tasksSnapshot = await _firestore
         .collection('tasks')
-        .where('userId', isEqualTo: uid) // userId 필드를 이용
+        .where('userId', isEqualTo: uid)
         .get();
 
     final tasks = tasksSnapshot.docs.map((doc) {
@@ -131,61 +132,73 @@ class _FeedBackPageState extends State<FeedBackPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('피드백 페이지'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/topbar_background.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
       ),
       drawer: const SideMenu(),
-      body: Column(
-        children: <Widget>[
-          TableCalendar(
-            focusedDay: selectedDate,
-            firstDay: DateTime.utc(2024, 1, 1),
-            lastDay: DateTime.utc(2024, 12, 31),
-            selectedDayPredicate: (day) => isSameDay(day, selectedDate),
-            onDaySelected: _onDaySelected,
-            calendarStyle: CalendarStyle(
-              todayDecoration: BoxDecoration(
-                color: Colors.purple.withOpacity(0.3),
-                shape: BoxShape.circle,
+      body: BackgroundContainer(
+        imagePath: 'assets/images/background_grid.png',
+        scale: 0.1, // 이미지 살짝 확대
+        child: Column(
+          children: <Widget>[
+            TableCalendar(
+              focusedDay: selectedDate,
+              firstDay: DateTime.utc(2024, 1, 1),
+              lastDay: DateTime.utc(2024, 12, 31),
+              selectedDayPredicate: (day) => isSameDay(day, selectedDate),
+              onDaySelected: _onDaySelected,
+              calendarStyle: CalendarStyle(
+                todayDecoration: BoxDecoration(
+                  color: Colors.purple.withOpacity(0.3),
+                  shape: BoxShape.circle,
+                ),
+                selectedDecoration: const BoxDecoration(
+                  color: Colors.deepPurple,
+                  shape: BoxShape.circle,
+                ),
+                selectedTextStyle: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              selectedDecoration: const BoxDecoration(
-                color: Colors.deepPurple,
-                shape: BoxShape.circle,
+            ),
+            Container(
+              height: 50,
+              color: Colors.red.shade100.withOpacity(0.8),
+              alignment: Alignment.center,
+              child: Text(
+                '${selectedDate.month}월 간 달성률: ${monthlyCompletionRate.toStringAsFixed(1)}%',
+                style: const TextStyle(fontSize: 25),
               ),
-              selectedTextStyle: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+            ),
+            Container(
+              height: 50,
+              color: Colors.blue.shade100.withOpacity(0.8),
+              alignment: Alignment.center,
+              child: Text(
+                '${selectedDate.month}월 ${_calculateMonthWeek(selectedDate)}주 간 달성률: ${weeklyCompletionRate.toStringAsFixed(1)}%',
+                style: const TextStyle(fontSize: 25),
               ),
             ),
-          ),
-          Container(
-            height: 50,
-            color: Colors.red.shade100,
-            alignment: Alignment.center,
-            child: Text(
-              '${selectedDate.month}월 간 달성률: ${monthlyCompletionRate.toStringAsFixed(1)}%',
-              style: const TextStyle(fontSize: 25),
+            Container(
+              height: 50,
+              color: Colors.green.shade100.withOpacity(0.8),
+              alignment: Alignment.center,
+              child: Text(
+                '${selectedDate.month}/${selectedDate.day} 일간 달성률: ${dailyCompletionRate.toStringAsFixed(1)}%',
+                style: const TextStyle(fontSize: 25),
+              ),
             ),
-          ),
-          Container(
-            height: 50,
-            color: Colors.blue.shade100,
-            alignment: Alignment.center,
-            child: Text(
-              '${selectedDate.month}월 ${_calculateMonthWeek(selectedDate)}주 간 달성률: ${weeklyCompletionRate.toStringAsFixed(1)}%',
-              style: const TextStyle(fontSize: 25),
-            ),
-          ),
-          Container(
-            height: 50,
-            color: Colors.green.shade100,
-            alignment: Alignment.center,
-            child: Text(
-              '${selectedDate.month}/${selectedDate.day} 일간 달성률: ${dailyCompletionRate.toStringAsFixed(1)}%',
-              style: const TextStyle(fontSize: 25),
-            ),
-          ),
-          const SizedBox(height: 20),
-        ],
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }
