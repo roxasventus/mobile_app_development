@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'Task.dart';
 import 'TaskManager.dart';
 import 'AddPage.dart';
-import 'BackgroundContainer.dart'; // BackgroundContainer import 추가
+import 'BackgroundContainer.dart';
+import 'TodayPage.dart'; // TodayPage import 필요 (날짜를 파라미터로 받는 TodayPage)
 
 class DatePageTab extends StatelessWidget {
   final DateTime selectedDay;
@@ -18,11 +20,11 @@ class DatePageTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 화면의 50% 높이 제한
+    // 화면의 60% 높이 제한
     final maxHeight = MediaQuery.of(context).size.height * 0.6;
 
     return BackgroundContainer(
-      imagePath: 'assets/images/background_datepageTab.png', // 배경 이미지 경로
+      imagePath: 'assets/images/background_datepageTab.png',
       child: Container(
         constraints: BoxConstraints(
           maxHeight: maxHeight,
@@ -110,9 +112,15 @@ class DatePageTab extends StatelessWidget {
                     ),
                     FloatingActionButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.pop(context); // BottomSheet 닫고
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TodayPage(selectedDay: selectedDay),
+                          ),
+                        );
                       },
-                      child: const Icon(Icons.close),
+                      child: const Icon(Icons.list), // 리스트 아이콘으로 변경
                     ),
                   ],
                 ),

@@ -7,6 +7,7 @@ import 'package:appproject/WeekPage.dart';
 import 'package:appproject/DatePage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:appproject/LoginPage.dart';
+import 'package:appproject/MemorizeSetting.dart';
 
 class SideMenu extends StatelessWidget {
   const SideMenu({Key? key}) : super(key: key);
@@ -41,7 +42,7 @@ class SideMenu extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         user?.email ?? '로그인 정보 없음',
-                        style: TextStyle(color: Colors.black, fontSize: 20),
+                        style: const TextStyle(color: Colors.black, fontSize: 20),
                       ),
                     ],
                   ),
@@ -55,7 +56,8 @@ class SideMenu extends StatelessWidget {
                 Navigator.of(context).popUntil((route) => route.isFirst);
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => TodayPage()),
+                  // TodayPage를 호출할 때 selectedDay 인자를 전달
+                  MaterialPageRoute(builder: (context) => TodayPage(selectedDay: DateTime.now())),
                 );
               },
             ),
@@ -94,6 +96,15 @@ class SideMenu extends StatelessWidget {
                 Navigator.of(context).popUntil((route) => route.isFirst);
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => const FileManagement()),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('암기 DB 설정'),
+              onTap: () {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const MemorizeSetting()),
                 );
               },
             ),

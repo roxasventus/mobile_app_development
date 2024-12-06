@@ -1,9 +1,11 @@
+// FeedBackPage.dart
 import 'package:appproject/SideMenu.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'BackgroundContainer.dart';
+import 'MemorizeView.dart'; // MemorizeView import
 
 class FeedBackPage extends StatefulWidget {
   const FeedBackPage({super.key});
@@ -55,7 +57,6 @@ class _FeedBackPageState extends State<FeedBackPage> {
       };
     }).toList();
 
-    // 월간 마지막 날짜 계산
     final nextMonth = selectedDate.month == 12
         ? DateTime(selectedDate.year + 1, 1, 1)
         : DateTime(selectedDate.year, selectedDate.month + 1, 1);
@@ -146,64 +147,76 @@ class _FeedBackPageState extends State<FeedBackPage> {
         imagePath: 'assets/images/background.png',
         child: Column(
           children: <Widget>[
-            TableCalendar(
-              focusedDay: selectedDate,
-              firstDay: DateTime.utc(2024, 1, 1),
-              lastDay: DateTime.utc(2024, 12, 31),
-              selectedDayPredicate: (day) => isSameDay(day, selectedDate),
-              onDaySelected: _onDaySelected,
-              calendarStyle: CalendarStyle(
-                todayDecoration: BoxDecoration(
-                  color: Colors.purple.withOpacity(0.3),
-                  shape: BoxShape.circle,
-                ),
-                selectedDecoration: const BoxDecoration(
-                  color: Colors.deepPurple,
-                  shape: BoxShape.circle,
-                ),
-                selectedTextStyle: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+            // 상단 영역을 Expanded로 감싸 남은 공간을 채우게 함
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  TableCalendar(
+                    focusedDay: selectedDate,
+                    firstDay: DateTime.utc(2024, 1, 1),
+                    lastDay: DateTime.utc(2024, 12, 31),
+                    selectedDayPredicate: (day) => isSameDay(day, selectedDate),
+                    onDaySelected: _onDaySelected,
+                    calendarStyle: CalendarStyle(
+                      todayDecoration: BoxDecoration(
+                        color: Colors.purple.withOpacity(0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      selectedDecoration: const BoxDecoration(
+                        color: Colors.deepPurple,
+                        shape: BoxShape.circle,
+                      ),
+                      selectedTextStyle: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      height: 50,
+                      color: Colors.red.shade100.withOpacity(0.8),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${selectedDate.month}월 간 달성률: ${monthlyCompletionRate.toStringAsFixed(1)}%',
+                        style: const TextStyle(fontSize: 25),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      height: 50,
+                      color: Colors.blue.shade100.withOpacity(0.8),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${selectedDate.month}월 ${_calculateMonthWeek(selectedDate)}주 간 달성률: ${weeklyCompletionRate.toStringAsFixed(1)}%',
+                        style: const TextStyle(fontSize: 25),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      height: 50,
+                      color: Colors.green.shade100.withOpacity(0.8),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${selectedDate.month}/${selectedDate.day} 일간 달성률: ${dailyCompletionRate.toStringAsFixed(1)}%',
+                        style: const TextStyle(fontSize: 25),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                height: 50,
-                color: Colors.red.shade100.withOpacity(0.8),
-                alignment: Alignment.center,
-                child: Text(
-                  '${selectedDate.month}월 간 달성률: ${monthlyCompletionRate.toStringAsFixed(1)}%',
-                  style: const TextStyle(fontSize: 25),
-                ),
-              ),
+            // 하단에 MemorizeView를 붙이는 컨테이너
+            Container(
+              height: MediaQuery.of(context).size.height * 0.1,
+              child: const MemorizeView(),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                height: 50,
-                color: Colors.blue.shade100.withOpacity(0.8),
-                alignment: Alignment.center,
-                child: Text(
-                  '${selectedDate.month}월 ${_calculateMonthWeek(selectedDate)}주 간 달성률: ${weeklyCompletionRate.toStringAsFixed(1)}%',
-                  style: const TextStyle(fontSize: 25),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                height: 50,
-                color: Colors.green.shade100.withOpacity(0.8),
-                alignment: Alignment.center,
-                child: Text(
-                  '${selectedDate.month}/${selectedDate.day} 일간 달성률: ${dailyCompletionRate.toStringAsFixed(1)}%',
-                  style: const TextStyle(fontSize: 25),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
           ],
         ),
       ),

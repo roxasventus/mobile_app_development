@@ -4,7 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:open_file/open_file.dart';
 import 'SideMenu.dart';
-import 'BackgroundContainer.dart'; // BackgroundContainer import 추가
+import 'BackgroundContainer.dart';
+import 'MemorizeView.dart';
 
 class FileManagement extends StatefulWidget {
   const FileManagement({Key? key}) : super(key: key);
@@ -199,6 +200,7 @@ class _FileManagementState extends State<FileManagement> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: const Text("자료 관리"),
         backgroundColor: Colors.transparent,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -208,7 +210,6 @@ class _FileManagementState extends State<FileManagement> {
             ),
           ),
         ),
-        title: const Text("자료 관리"),
         leading: Builder(
           builder: (context) {
             return IconButton(
@@ -219,6 +220,12 @@ class _FileManagementState extends State<FileManagement> {
             );
           },
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _selectAndSaveFile,
+          ),
+        ],
       ),
       drawer: const SideMenu(),
       body: BackgroundContainer(
@@ -283,14 +290,13 @@ class _FileManagementState extends State<FileManagement> {
                 },
               ),
             ),
+            Container(
+              height: MediaQuery.of(context).size.height * 0.1,
+              child: const MemorizeView(),
+            ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _selectAndSaveFile,
-        child: const Icon(Icons.add),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

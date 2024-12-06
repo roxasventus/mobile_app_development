@@ -9,14 +9,16 @@ import 'BackgroundContainer.dart';
 import 'TodayPageGrid.dart'; // 별도로 구현한 TodayPageGrid 위젯 import
 
 class TodayPage extends StatelessWidget {
-  const TodayPage({super.key});
+  final DateTime selectedDay; // 날짜를 외부로부터 받음
+
+  const TodayPage({super.key, required this.selectedDay});
 
   @override
   Widget build(BuildContext context) {
     final taskManager = TaskManager();
 
-    // 현재 날짜를 'M월 d일' 형식으로 변환
-    String formattedDate = DateFormat('M월 d일').format(DateTime.now());
+    // 선택한 날짜를 'M월 d일' 형식으로 변환
+    String formattedDate = DateFormat('M월 d일').format(selectedDay);
 
     // 할 일 순서 재정렬 함수
     void reorderTasks(List<Task> tasks, int oldIndex, int newIndex) async {
@@ -32,7 +34,7 @@ class TodayPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('$formattedDate 오늘의 할일'),
+        title: Text('$formattedDate의 할일'),
         backgroundColor: Colors.transparent,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -62,10 +64,10 @@ class TodayPage extends StatelessWidget {
             Flexible(
               flex: 1,
               child: StreamBuilder<List<Task>>(
-                stream: taskManager.getTasksByDateStream(DateTime.now()),
+                stream: taskManager.getTasksByDateStream(selectedDay),
                 builder: (context, snapshot) {
                   final tasks = snapshot.data ?? [];
-                  // 여기서 tasks를 TodayPageGrid에 전달
+                  // tasks를 TodayPageGrid에 전달
                   return TodayPageGrid(tasks: tasks);
                 },
               ),
@@ -74,7 +76,7 @@ class TodayPage extends StatelessWidget {
             Flexible(
               flex: 1,
               child: StreamBuilder<List<Task>>(
-                stream: taskManager.getTasksByDateStream(DateTime.now()),
+                stream: taskManager.getTasksByDateStream(selectedDay),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -109,13 +111,14 @@ class TodayPage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {
+          // AddPage를 열 때도 selectedDay를 전달
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AddPage(selectedDay: DateTime.now()),
+              builder: (context) => AddPage(selectedDay: selectedDay),
             ),
           ).then((_) {
-            // AddPage에서 돌아온 뒤, 할 일 추가 시 자동 업데이트 (StreamBuilder로)
+            // AddPage에서 돌아온 뒤 할 일 추가 시 자동 업데이트 (StreamBuilder로)
           });
         },
       ),

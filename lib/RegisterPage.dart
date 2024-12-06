@@ -5,7 +5,6 @@ import 'package:appproject/TodayPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
-
 class RegisterPage extends StatelessWidget{
   const RegisterPage({super.key});
 
@@ -52,7 +51,6 @@ class _RegisterFormState extends State<RegisterForm>{
           child: ListView(
             children: [
 
-
               SizedBox(height: 20,),
 
               Container(
@@ -69,13 +67,12 @@ class _RegisterFormState extends State<RegisterForm>{
 
               SizedBox(height: 20,),
 
-
               TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Email',
                   labelStyle: TextStyle(
                     fontFamily: 'mitMi.ttf.ttf', // 라벨에 적용할 글꼴
-                    fontSize: 25, // 라벨 텍스트 색상
+                    fontSize: 25, // 라벨 텍스트 크기
                   ),
                 ),
                 onChanged: (value){
@@ -91,7 +88,7 @@ class _RegisterFormState extends State<RegisterForm>{
                   labelText: 'Password',
                   labelStyle: TextStyle(
                     fontFamily: 'mitMi.ttf.ttf', // 라벨에 적용할 글꼴
-                    fontSize: 25, // 라벨 텍스트 색상
+                    fontSize: 25, // 라벨 텍스트 크기
                   ),
                 ),
                 style: TextStyle(
@@ -111,7 +108,7 @@ class _RegisterFormState extends State<RegisterForm>{
                   labelText: 'User Name',
                   labelStyle: TextStyle(
                     fontFamily: 'mitMi.ttf.ttf', // 라벨에 적용할 글꼴
-                    fontSize: 25, // 라벨 텍스트 색상
+                    fontSize: 25, // 라벨 텍스트 크기
                   ),
                 ),
                 style: TextStyle(
@@ -138,7 +135,8 @@ class _RegisterFormState extends State<RegisterForm>{
                   });
                   if (newUser.user != null){
                     _formKey.currentState!.reset();
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=> const TodayPage()));
+                    // TodayPage로 넘어갈 때 selectedDay 인자를 추가
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=> TodayPage(selectedDay: DateTime.now())));
                   }
                   setState(() {
                     saving = false;
