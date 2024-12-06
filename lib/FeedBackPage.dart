@@ -37,17 +37,15 @@ class _FeedBackPageState extends State<FeedBackPage> {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    final userDoc = await _firestore.collection('user').doc(user.uid).get();
-    final userName = userDoc.data()?['userName'];
-    if (userName == null) return;
+    final uid = user.uid; // 현재 로그인한 사용자의 UID
 
     final tasksSnapshot = await _firestore
         .collection('tasks')
-        .where('userName', isEqualTo: userName)
+        .where('userId', isEqualTo: uid) // userId 필드를 이용
         .get();
 
     final tasks = tasksSnapshot.docs.map((doc) {
-      final data = doc.data() as Map<String, dynamic>;
+      final data = doc.data();
       final rawDate = (data['date'] as Timestamp).toDate();
       final taskDate = _startOfDay(rawDate);
 
@@ -56,6 +54,12 @@ class _FeedBackPageState extends State<FeedBackPage> {
         'date': taskDate,
       };
     }).toList();
+
+    // 월간 마지막 날짜 계산
+    final nextMonth = selectedDate.month == 12
+        ? DateTime(selectedDate.year + 1, 1, 1)
+        : DateTime(selectedDate.year, selectedDate.month + 1, 1);
+    final lastDayOfMonth = nextMonth.subtract(const Duration(days: 1));
 
     setState(() {
       dailyCompletionRate = _calculateCompletionRate(
@@ -71,9 +75,7 @@ class _FeedBackPageState extends State<FeedBackPage> {
       monthlyCompletionRate = _calculateCompletionRate(
         tasks,
         _startOfDay(DateTime(selectedDate.year, selectedDate.month, 1)),
-        _endOfDay(
-          DateTime(selectedDate.year, selectedDate.month + 1, 0),
-        ),
+        _endOfDay(lastDayOfMonth),
       );
     });
   }
@@ -87,7 +89,8 @@ class _FeedBackPageState extends State<FeedBackPage> {
 
     if (filteredTasks.isEmpty) return 0.0;
 
-    final completedTasks = filteredTasks.where((task) => task['isCompleted'] == true).length;
+    final completedTasks =
+        filteredTasks.where((task) => task['isCompleted'] == true).length;
     return (completedTasks / filteredTasks.length) * 100;
   }
 
@@ -114,12 +117,21 @@ class _FeedBackPageState extends State<FeedBackPage> {
     });
   }
 
+  int _calculateMonthWeek(DateTime date) {
+    DateTime firstDayOfMonth = DateTime(date.year, date.month, 1);
+    int firstWeekday = firstDayOfMonth.weekday;
+    DateTime firstSundayOfMonth =
+    firstDayOfMonth.subtract(Duration(days: (firstWeekday % 7)));
+    int daysDifference = date.difference(firstSundayOfMonth).inDays;
+    return (daysDifference / 7).floor() + 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('피드백 페이지'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       drawer: const SideMenu(),
       body: Column(
@@ -176,14 +188,5 @@ class _FeedBackPageState extends State<FeedBackPage> {
         ],
       ),
     );
-  }
-
-  int _calculateMonthWeek(DateTime date) {
-    DateTime firstDayOfMonth = DateTime(date.year, date.month, 1);
-    int firstWeekday = firstDayOfMonth.weekday;
-    DateTime firstSundayOfMonth =
-    firstDayOfMonth.subtract(Duration(days: (firstWeekday % 7)));
-    int daysDifference = date.difference(firstSundayOfMonth).inDays;
-    return (daysDifference / 7).floor() + 1;
   }
 }
