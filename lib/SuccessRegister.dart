@@ -1,13 +1,4 @@
 // SuccessRegister.dart
-import 'package:appproject/TodayPage.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'LoginPage.dart';
-import 'RegisterPage.dart';
-import 'SuccessRegister.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:flutter/material.dart';
 
 class SuccessRegister extends StatelessWidget{

@@ -6,6 +6,7 @@ import 'ReorderableTaskList.dart';
 import 'SideMenu.dart';
 import 'AddPage.dart';
 import 'BackgroundContainer.dart';
+import 'TodayPageGrid.dart'; // 별도로 구현한 TodayPageGrid 위젯 import
 
 class TodayPage extends StatelessWidget {
   const TodayPage({super.key});
@@ -14,10 +15,10 @@ class TodayPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final taskManager = TaskManager();
 
-    // 현재 날짜를 'x월 x일 오늘의 할일' 형식으로 변환
+    // 현재 날짜를 'M월 d일' 형식으로 변환
     String formattedDate = DateFormat('M월 d일').format(DateTime.now());
 
-    // Function to reorder tasks
+    // 할 일 순서 재정렬 함수
     void reorderTasks(List<Task> tasks, int oldIndex, int newIndex) async {
       if (newIndex > oldIndex) newIndex -= 1;
       final task = tasks.removeAt(oldIndex);
@@ -54,37 +55,55 @@ class TodayPage extends StatelessWidget {
       ),
       drawer: const SideMenu(),
       body: BackgroundContainer(
-        imagePath: 'assets/images/background.png', // 사용할 배경 이미지 경로
-        child: StreamBuilder<List<Task>>(
-          stream: taskManager.getTasksByDateStream(DateTime.now()),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return const Center(child: Text('작업을 불러오는 중 오류가 발생했습니다.'));
-            }
+        imagePath: 'assets/images/background.png',
+        child: Column(
+          children: [
+            // 상단 50% 영역: TodayPageGrid를 이용해 시간표 표시
+            Flexible(
+              flex: 1,
+              child: StreamBuilder<List<Task>>(
+                stream: taskManager.getTasksByDateStream(DateTime.now()),
+                builder: (context, snapshot) {
+                  final tasks = snapshot.data ?? [];
+                  // 여기서 tasks를 TodayPageGrid에 전달
+                  return TodayPageGrid(tasks: tasks);
+                },
+              ),
+            ),
+            // 하단 50% 영역: 할 일 목록 표시
+            Flexible(
+              flex: 1,
+              child: StreamBuilder<List<Task>>(
+                stream: taskManager.getTasksByDateStream(DateTime.now()),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return const Center(child: Text('작업을 불러오는 중 오류가 발생했습니다.'));
+                  }
 
-            final tasks = snapshot.data ?? [];
-            if (tasks.isEmpty) {
-              return const Center(child: Text('할 일이 없습니다.'));
-            }
+                  final tasks = snapshot.data ?? [];
+                  if (tasks.isEmpty) {
+                    return const Center(child: Text('할 일이 없습니다.'));
+                  }
 
-            return ReorderableTaskList(
-              tasks: tasks,
-              onToggleTaskCompletion: (taskId, currentStatus) {
-                // 체크박스 클릭 시 완료 상태 토글
-                taskManager.toggleTaskCompletion(taskId, currentStatus);
-              },
-              onDeleteTask: (taskId) {
-                // 삭제 버튼 클릭 시 삭제
-                taskManager.deleteTask(taskId);
-              },
-              onReorderTasks: (oldIndex, newIndex) {
-                reorderTasks(tasks, oldIndex, newIndex);
-              },
-            );
-          },
+                  return ReorderableTaskList(
+                    tasks: tasks,
+                    onToggleTaskCompletion: (taskId, currentStatus) {
+                      taskManager.toggleTaskCompletion(taskId, currentStatus);
+                    },
+                    onDeleteTask: (taskId) {
+                      taskManager.deleteTask(taskId);
+                    },
+                    onReorderTasks: (oldIndex, newIndex) {
+                      reorderTasks(tasks, oldIndex, newIndex);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -96,8 +115,7 @@ class TodayPage extends StatelessWidget {
               builder: (context) => AddPage(selectedDay: DateTime.now()),
             ),
           ).then((_) {
-            // AddPage에서 돌아온 뒤 할 일이 추가됐을 경우,
-            // StreamBuilder가 Firestore 변경사항을 감지 -> 자동 업데이트
+            // AddPage에서 돌아온 뒤, 할 일 추가 시 자동 업데이트 (StreamBuilder로)
           });
         },
       ),
