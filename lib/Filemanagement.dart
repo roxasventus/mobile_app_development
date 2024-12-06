@@ -1,10 +1,10 @@
-// Filemanagement.dart
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:open_file/open_file.dart';
+import 'SideMenu.dart';
 
 class FileManagement extends StatefulWidget {
   const FileManagement({Key? key}) : super(key: key);
@@ -18,6 +18,10 @@ class _FileManagementState extends State<FileManagement> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   List<Map<String, dynamic>> _fileMetadata = [];
+  List<Map<String, dynamic>> _filteredMetadata = [];
+
+  Set<String> _allTags = {'전체', '임시태그'};
+  String _selectedTag = '전체';
 
   @override
   void initState() {
@@ -36,17 +40,76 @@ class _FileManagementState extends State<FileManagement> {
           .where('userId', isEqualTo: user.uid)
           .get();
 
-      setState(() {
-        _fileMetadata = snapshot.docs
-            .map((doc) => {
+      final data = snapshot.docs.map((doc) {
+        final d = doc.data();
+        final rawTag = d['tags'];
+        String tag;
+        if (rawTag is String && rawTag.isNotEmpty) {
+          tag = rawTag;
+        } else {
+          tag = '임시태그';
+        }
+
+        return {
           'id': doc.id,
-          ...doc.data(),
-        })
-            .toList();
+          'name': d['name'],
+          'path': d['path'],
+          'uploadedAt': d['uploadedAt'],
+          'userId': d['userId'],
+          'tags': tag,
+        };
+      }).toList();
+
+      setState(() {
+        _fileMetadata = data;
+        _refreshTags();
+        _applyFilter();
       });
     } catch (e) {
       print('Error fetching file metadata: $e');
     }
+  }
+
+  void _refreshTags() {
+    // 모든 파일 태그 추출
+    final tags = _fileMetadata.map((f) => f['tags'] as String).toSet();
+    // 기본 태그 추가
+    tags.add('임시태그');
+    tags.add('전체');
+    _allTags = tags;
+  }
+
+  // Dialog to enter a single tag
+  Future<String> _showTagDialog() async {
+    TextEditingController tagController = TextEditingController();
+    final tag = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('tag 입력'),
+        content: TextField(
+          controller: tagController,
+          decoration: const InputDecoration(
+              hintText: 'tag 입력 (미지정 시 임시태그)'
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, ''); // 취소시 빈태그
+            },
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              final input = tagController.text.trim();
+              Navigator.pop(context, input);
+            },
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
+    return tag ?? '';
   }
 
   // Select a file and save its path in Firestore
@@ -59,12 +122,17 @@ class _FileManagementState extends State<FileManagement> {
 
       if (user == null) return;
 
+      // Show dialog to enter tag
+      final tag = await _showTagDialog();
+      final finalTag = tag.isEmpty ? '임시태그' : tag;
+
       try {
         final fileMetadata = {
           'name': fileName,
           'path': selectedFilePath,
           'uploadedAt': Timestamp.now(),
           'userId': user.uid,
+          'tags': finalTag,
         };
 
         // Save metadata to Firestore
@@ -75,6 +143,8 @@ class _FileManagementState extends State<FileManagement> {
             'id': docRef.id,
             ...fileMetadata,
           });
+          _refreshTags();
+          _applyFilter();
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -110,6 +180,10 @@ class _FileManagementState extends State<FileManagement> {
 
       setState(() {
         _fileMetadata.removeWhere((file) => file['id'] == fileId);
+        _refreshTags();
+        // 파일 삭제 시 필터를 전체로 돌린 뒤 적용
+        _selectedTag = '전체';
+        _applyFilter();
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -123,35 +197,101 @@ class _FileManagementState extends State<FileManagement> {
     }
   }
 
+  void _applyFilter() {
+    if (_selectedTag == '전체') {
+      _filteredMetadata = List.from(_fileMetadata);
+    } else {
+      _filteredMetadata = _fileMetadata.where((file) => file['tags'] == _selectedTag).toList();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // AppBar
       appBar: AppBar(
-        title: const Text('자료 관리'),
-        actions: [
-          IconButton(
-            onPressed: _selectAndSaveFile,
-            icon: const Icon(Icons.add),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text("자료 관리"),
+        leading: Builder(
+          builder: (context) {
+            return IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
+        ),
+      ),
+      drawer: const SideMenu(),
+      body: Column(
+        children: [
+          // 태그 선택 Dropdown
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                const Text('태그 필터: ', style: TextStyle(fontSize: 16)),
+                Expanded(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedTag,
+                    items: _allTags.map((tag) {
+                      return DropdownMenuItem<String>(
+                        value: tag,
+                        child: Text(tag),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          _selectedTag = value;
+                          _applyFilter();
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: _filteredMetadata.isEmpty
+                ? const Center(child: Text('No files found.'))
+                : ListView.builder(
+              itemCount: _filteredMetadata.length,
+              itemBuilder: (context, index) {
+                final file = _filteredMetadata[index];
+                final tag = file['tags'] as String;
+                return ListTile(
+                  title: Text(file['name']),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Path: ${file['path']}'),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Chip(label: Text(tag)),
+                      ),
+                    ],
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () => _deleteFile(file['id']),
+                  ),
+                  onTap: () => _openFile(file['path']),
+                );
+              },
+            ),
           ),
         ],
       ),
-      body: _fileMetadata.isEmpty
-          ? const Center(child: Text('No files found.'))
-          : ListView.builder(
-        itemCount: _fileMetadata.length,
-        itemBuilder: (context, index) {
-          final file = _fileMetadata[index];
-          return ListTile(
-            title: Text(file['name']),
-            subtitle: Text('Path: ${file['path']}'),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () => _deleteFile(file['id']),
-            ),
-            onTap: () => _openFile(file['path']),
-          );
-        },
+      floatingActionButton: FloatingActionButton(
+        onPressed: _selectAndSaveFile,
+        child: const Icon(Icons.add),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
