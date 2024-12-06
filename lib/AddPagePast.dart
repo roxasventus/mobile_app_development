@@ -13,7 +13,6 @@ class AddPagePast extends StatelessWidget {
     try {
       final newTask = Task(
         title: pastTask.title,
-        description: pastTask.description,
         date: DateTime(selectedDay.year, selectedDay.month, selectedDay.day),
         userId: await _taskManager.currentUserId,
         startTime: DateTime(selectedDay.year, selectedDay.month, selectedDay.day,

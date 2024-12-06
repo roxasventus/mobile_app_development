@@ -1,11 +1,9 @@
-// lib/Task.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 
 class Task {
   final String id;
   final String title;
-  final String description;
   final DateTime date;
   final String userId;
   bool isCompleted;
@@ -15,7 +13,6 @@ class Task {
   Task({
     String? id,
     required this.title,
-    this.description = '',
     required this.date,
     required this.userId,
     this.isCompleted = false,
@@ -28,7 +25,6 @@ class Task {
     return Task(
       id: doc.id,
       title: data['title'] ?? '',
-      description: data['description'] ?? '',
       date: (data['date'] as Timestamp).toDate().toLocal(),
       userId: data['userId'] ?? '',
       isCompleted: data['isCompleted'] ?? false,
@@ -44,7 +40,6 @@ class Task {
   Map<String, dynamic> toMap() {
     return {
       'title': title,
-      'description': description,
       'date': date.toUtc(),
       'userId': userId,
       'isCompleted': isCompleted,
