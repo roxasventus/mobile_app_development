@@ -58,10 +58,10 @@ class _RegisterFormState extends State<RegisterForm>{
                 height: 100,
                 child: Image.asset('assets/images/Pencil.png', fit: BoxFit.contain),
               ),
-              Text('어플 이름',
+              Text('Register',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 40, color: Colors.white),),
-              Text('여기에 어플 설명을 한 줄',
+              Text('',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 20, color: Colors.white),),
 

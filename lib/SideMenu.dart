@@ -38,7 +38,7 @@ class SideMenu extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.email, color: Colors.grey),
+                      const Icon(Icons.email, color: Colors.black),
                       const SizedBox(width: 8),
                       Text(
                         user?.email ?? '로그인 정보 없음',

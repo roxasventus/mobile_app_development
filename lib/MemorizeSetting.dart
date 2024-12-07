@@ -152,7 +152,7 @@ class _MemorizeSettingState extends State<MemorizeSetting> {
             const SizedBox(height: 20),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.greenAccent,
+                backgroundColor: Colors.green,
               ),
               onPressed: _isSaving ? null : _onConfirm,
               child: _isSaving
