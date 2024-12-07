@@ -17,15 +17,23 @@ class TodayPageGrid extends StatelessWidget {
 
     // 색상 리스트 (Task별 구분)
     final colorList = [
-      Colors.greenAccent.shade100,
-      Colors.pink.shade50,
-      Colors.yellow.shade100,
-      Colors.orange.shade100,
-      Colors.purple.shade100,
-      Colors.lightBlueAccent.shade100,
-      Colors.teal.shade100,
-      Colors.brown.shade100,
+      Colors.green.shade300,
+      Colors.pink.shade200,
+      Colors.yellow.shade300,
+      Colors.orange.shade300,
+      Colors.purple.shade200,
+      Colors.lightBlue.shade200,
+      Colors.teal.shade300,
+      Colors.brown.shade300,
     ];
+
+    // 각 할 일마다 고유 색상 할당
+    // 여기서 task.id를 키로 쓰고, colorList에서 순서대로 색 할당
+    final Map<String, Color> taskColorMap = {};
+    for (int i = 0; i < tasks.length; i++) {
+      final t = tasks[i];
+      taskColorMap[t.id] = colorList[i % colorList.length];
+    }
 
     DateTime roundDownTo10Min(DateTime dt) {
       int roundedMinute = (dt.minute ~/ 10) * 10;
@@ -116,12 +124,13 @@ class TodayPageGrid extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                for (int i = 0; i < displayedTasks.length; i++)
+                                for (final task in displayedTasks)
                                   Container(
                                     height: 5,
                                     width: double.infinity,
                                     margin: const EdgeInsets.symmetric(vertical: 1.0),
-                                    color: colorList[i % colorList.length],
+                                    // 여기서 task별로 미리 할당한 색상 사용
+                                    color: taskColorMap[task.id],
                                   ),
                               ],
                             ),
