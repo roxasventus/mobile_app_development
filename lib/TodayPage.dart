@@ -20,17 +20,17 @@ class TodayPage extends StatelessWidget {
     // 선택한 날짜를 'M월 d일' 형식으로 변환
     String formattedDate = DateFormat('M월 d일').format(selectedDay);
 
-    // 할 일 순서 재정렬 함수
-    void reorderTasks(List<Task> tasks, int oldIndex, int newIndex) async {
-      if (newIndex > oldIndex) newIndex -= 1;
-      final task = tasks.removeAt(oldIndex);
-      tasks.insert(newIndex, task);
+    // 할 일 순서 재정렬 함수 제거
+    // void reorderTasks(List<Task> tasks, int oldIndex, int newIndex) async {
+    //   if (newIndex > oldIndex) newIndex -= 1;
+    //   final task = tasks.removeAt(oldIndex);
+    //   tasks.insert(newIndex, task);
 
-      // Firestore의 order 업데이트
-      for (int i = 0; i < tasks.length; i++) {
-        await taskManager.updateTaskOrder(tasks[i].id, i);
-      }
-    }
+    //   // Firestore의 order 업데이트
+    //   for (int i = 0; i < tasks.length; i++) {
+    //     await taskManager.updateTaskOrder(tasks[i].id, i);
+    //   }
+    // }
 
     return Scaffold(
       appBar: AppBar(
@@ -98,9 +98,7 @@ class TodayPage extends StatelessWidget {
                     onDeleteTask: (taskId) {
                       taskManager.deleteTask(taskId);
                     },
-                    onReorderTasks: (oldIndex, newIndex) {
-                      reorderTasks(tasks, oldIndex, newIndex);
-                    },
+                    // onReorderTasks 제거
                   );
                 },
               ),
