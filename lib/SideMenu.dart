@@ -82,7 +82,7 @@ class SideMenu extends StatelessWidget {
               },
             ),
             ListTile(
-              title: const Text('피드백', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, fontWeight: FontWeight.bold,)),
+              title: const Text('달성률 확인', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, fontWeight: FontWeight.bold,)),
               onTap: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
                 Navigator.of(context).push(

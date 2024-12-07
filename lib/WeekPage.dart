@@ -29,7 +29,7 @@ class _WeekPageState extends State<WeekPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('habit tracker', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 35),),
+        title: const Text('habit tracker', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30),),
         backgroundColor: Colors.transparent,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -75,7 +75,7 @@ class _WeekPageState extends State<WeekPage> {
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 '날짜: ${_dateString(selectedDate)}',
-                  style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
             const Divider(height: 1, thickness: 1),
@@ -101,7 +101,7 @@ class _WeekPageState extends State<WeekPage> {
                       child: Card(
                         margin: const EdgeInsets.symmetric(vertical: 8.0),
                         child: ListTile(
-                          title: Text(habitList[index]['name'], style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30)),
+                          title: Text(habitList[index]['name'], style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25)),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [

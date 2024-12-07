@@ -36,7 +36,7 @@ class _DatePageState extends State<DatePage> {
             ),
           ),
         ),
-        title: const Text('날짜별 할 일 리스트', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 35)),
+        title: const Text('날짜별 할 일 리스트', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30)),
         leading: Builder(
           builder: (context) {
             return IconButton(

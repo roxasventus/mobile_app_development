@@ -34,7 +34,7 @@ class TodayPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('$formattedDate의 할일', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 35)),
+        title: Text('$formattedDate의 할일', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30)),
         backgroundColor: Colors.transparent,
         flexibleSpace: Container(
           decoration: const BoxDecoration(

@@ -131,7 +131,7 @@ class _FeedBackPageState extends State<FeedBackPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('피드백 페이지', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 35)),
+        title: const Text('달성률 확인', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30)),
         backgroundColor: Colors.transparent,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -181,7 +181,7 @@ class _FeedBackPageState extends State<FeedBackPage> {
                       alignment: Alignment.center,
                       child: Text(
                         '${selectedDate.month}월 간 달성률: ${monthlyCompletionRate.toStringAsFixed(1)}%',
-                          style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 35),
+                          style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),
                       ),
                     ),
                   ),
@@ -193,7 +193,7 @@ class _FeedBackPageState extends State<FeedBackPage> {
                       alignment: Alignment.center,
                       child: Text(
                         '${selectedDate.month}월 ${_calculateMonthWeek(selectedDate)}주 간 달성률: ${weeklyCompletionRate.toStringAsFixed(1)}%',
-                        style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 35),
+                        style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),
                       ),
                     ),
                   ),
@@ -205,7 +205,7 @@ class _FeedBackPageState extends State<FeedBackPage> {
                       alignment: Alignment.center,
                       child: Text(
                         '${selectedDate.month}/${selectedDate.day} 일간 달성률: ${dailyCompletionRate.toStringAsFixed(1)}%',
-                        style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 35),
+                        style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),
                       ),
                     ),
                   ),

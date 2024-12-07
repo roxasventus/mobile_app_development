@@ -26,7 +26,7 @@ class AddPage extends StatelessWidget {
               ),
             ),
           ),
-          title: Text(formattedDate, style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 35)),
+          title: Text(formattedDate, style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30)),
           leading: Builder(
             builder: (context) {
               return IconButton(

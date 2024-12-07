@@ -123,8 +123,8 @@ class _MemorizeSettingState extends State<MemorizeSetting> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              '암기할 언어를 선택하세요:',
-              style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30, fontWeight: FontWeight.bold),
+              '암기할 언어 설정',
+              style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             Container(
@@ -161,7 +161,7 @@ class _MemorizeSettingState extends State<MemorizeSetting> {
                 height: 24,
                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
               )
-                  : const Text('확인', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, color: Colors.white),),
+                  : const Text('확인', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20, color: Colors.white),),
             ),
             const SizedBox(height: 20),
             // MemorizeView 컨테이너 크기 조정

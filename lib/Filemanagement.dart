@@ -201,7 +201,7 @@ class _FileManagementState extends State<FileManagement> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("공부 자료 관리", style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 35),),
+        title: const Text("공부 자료 관리", style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30),),
         backgroundColor: Colors.transparent,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
