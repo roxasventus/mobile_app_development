@@ -40,6 +40,16 @@ class DatePageTab extends StatelessWidget {
 
             final tasks = snapshot.data ?? [];
 
+            // 시작시간 기준으로 정렬
+            tasks.sort((a, b) {
+              final aStart = a.startTime;
+              final bStart = b.startTime;
+              if (aStart == null && bStart == null) return 0;
+              if (aStart == null) return 1; // a의 시작시간만 없는 경우 뒤로
+              if (bStart == null) return -1; // b의 시작시간만 없는 경우 뒤로
+              return aStart.compareTo(bStart);
+            });
+
             return Column(
               children: [
                 const SizedBox(height: 24),
@@ -71,7 +81,7 @@ class DatePageTab extends StatelessWidget {
                         title: Text(task.title, style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20, fontWeight: FontWeight.bold)),
                         subtitle: (task.startTime != null && task.endTime != null)
                             ? Text(
-                          '${TimeOfDay.fromDateTime(task.startTime!).format(context)} - ${TimeOfDay.fromDateTime(task.endTime!).format(context)}',
+                            '${TimeOfDay.fromDateTime(task.startTime!).format(context)} - ${TimeOfDay.fromDateTime(task.endTime!).format(context)}',
                             style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20))
                             : null,
                         trailing: IconButton(

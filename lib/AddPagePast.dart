@@ -73,16 +73,33 @@ class AddPagePast extends StatelessWidget {
               if (tasks.isEmpty) {
                 return const Center(child: Text('지난 7일간 기록이 없습니다.', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30)));
               }
+
+              // 시작시간 기준으로 정렬
+              tasks.sort((a, b) {
+                final aStart = a.startTime;
+                final bStart = b.startTime;
+                if (aStart == null && bStart == null) return 0;
+                if (aStart == null) return 1; // a만 시간 없으면 뒤로
+                if (bStart == null) return -1; // b만 시간 없으면 뒤로
+                return aStart.compareTo(bStart);
+              });
+
               return ListView.builder(
                 itemCount: tasks.length,
                 itemBuilder: (context, index) {
                   final task = tasks[index];
                   return ListTile(
-                    title: Text(task.title, style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20, fontWeight: FontWeight.bold)),
+                    title: Text(task.title,
+                        style: TextStyle(
+                            fontFamily: '나눔손글씨_미니_손글씨.ttf',
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold
+                        )
+                    ),
                     subtitle: Text(
-                      '${DateFormat('M월 d일').format(task.date)}\n'
-                          '${TimeOfDay.fromDateTime(task.startTime!).format(context)} - '
-                          '${TimeOfDay.fromDateTime(task.endTime!).format(context)}',
+                        '${DateFormat('M월 d일').format(task.date)}\n'
+                            '${task.startTime != null ? TimeOfDay.fromDateTime(task.startTime!).format(context) : ''} - '
+                            '${task.endTime != null ? TimeOfDay.fromDateTime(task.endTime!).format(context) : ''}',
                         style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20)
                     ),
                     trailing: IconButton(
