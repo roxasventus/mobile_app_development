@@ -78,6 +78,11 @@ class _RegisterFormState extends State<RegisterForm>{
                     fontSize: 25, // 라벨 텍스트 크기
                   ),
                 ),
+                style: TextStyle(
+                  fontFamily: 'mitMi.ttf.ttf', // 입력 텍스트에 적용할 글꼴
+                  fontSize: 25,
+                  color: Colors.black, // 입력 텍스트 색상
+                ),
                 onChanged: (value){
                   email = value;
                 },
