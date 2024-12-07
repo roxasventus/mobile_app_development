@@ -58,10 +58,13 @@ class _RegisterFormState extends State<RegisterForm>{
                 height: 100,
                 child: Image.asset('assets/images/Pencil.png', fit: BoxFit.contain),
               ),
-              Text('Register',
+              SizedBox(
+                height: 10,
+              ),
+              Text('차근차근',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 40, color: Colors.white),),
-              Text('',
+              Text('복잡한 하루를 단순하게',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 20, color: Colors.white),),
 
