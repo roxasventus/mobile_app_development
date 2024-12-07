@@ -42,7 +42,7 @@ class SideMenu extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         user?.email ?? '로그인 정보 없음',
-                          style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30, fontWeight: FontWeight.bold,),
+                          style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, fontWeight: FontWeight.bold,),
                       ),
                     ],
                   ),
@@ -51,7 +51,7 @@ class SideMenu extends StatelessWidget {
               ),
             ),
             ListTile(
-              title: const Text('오늘의 할 일 리스트' , style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30, fontWeight: FontWeight.bold,)),
+              title: const Text('오늘의 할 일 리스트' , style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, fontWeight: FontWeight.bold,)),
               onTap: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
                 Navigator.pushReplacement(
@@ -62,7 +62,7 @@ class SideMenu extends StatelessWidget {
               },
             ),
             ListTile(
-              title: const Text('날짜별 할 일', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30, fontWeight: FontWeight.bold,)),
+              title: const Text('날짜별 할 일', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, fontWeight: FontWeight.bold,)),
               onTap: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
                 Navigator.pushReplacement(
@@ -72,7 +72,7 @@ class SideMenu extends StatelessWidget {
               },
             ),
             ListTile(
-              title: const Text('habit tracker', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30, fontWeight: FontWeight.bold,)),
+              title: const Text('habit tracker', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, fontWeight: FontWeight.bold,)),
               onTap: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
                 Navigator.pushReplacement(
@@ -82,7 +82,7 @@ class SideMenu extends StatelessWidget {
               },
             ),
             ListTile(
-              title: const Text('피드백', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30, fontWeight: FontWeight.bold,)),
+              title: const Text('피드백', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, fontWeight: FontWeight.bold,)),
               onTap: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
                 Navigator.of(context).push(
@@ -91,7 +91,7 @@ class SideMenu extends StatelessWidget {
               },
             ),
             ListTile(
-              title: const Text('공부 자료 관리', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30, fontWeight: FontWeight.bold,)),
+              title: const Text('공부 자료 관리', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, fontWeight: FontWeight.bold,)),
               onTap: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
                 Navigator.of(context).push(
@@ -100,7 +100,7 @@ class SideMenu extends StatelessWidget {
               },
             ),
             ListTile(
-              title: const Text('암기 DB 설정', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30, fontWeight: FontWeight.bold,)),
+              title: const Text('암기 DB 설정', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, fontWeight: FontWeight.bold,)),
               onTap: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
                 Navigator.of(context).push(
@@ -111,7 +111,7 @@ class SideMenu extends StatelessWidget {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout),
-              title: const Text('로그아웃', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30, fontWeight: FontWeight.bold,)),
+              title: const Text('로그아웃', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, fontWeight: FontWeight.bold,)),
               onTap: () async {
                 await FirebaseAuth.instance.signOut();
                 Navigator.of(context).pushAndRemoveUntil(
