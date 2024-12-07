@@ -111,7 +111,7 @@ class _WeekPageState extends State<WeekPage> {
                                   fontSize: 20,
                                   fontFamily: '나눔손글씨_미니_손글씨.ttf',
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.greenAccent,
+                                  color: Colors.green,
                                 ),
                               ),
                               const SizedBox(width: 8),

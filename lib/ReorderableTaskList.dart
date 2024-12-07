@@ -29,7 +29,7 @@ class ReorderableTaskList extends StatelessWidget {
             title: Text(task.title, style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20, fontWeight: FontWeight.bold)),
             subtitle: task.startTime != null && task.endTime != null
                 ? Text(
-                'Start: ${TimeOfDay.fromDateTime(task.startTime!).format(context)} - End: ${TimeOfDay.fromDateTime(task.endTime!).format(context)}', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20))
+                '${TimeOfDay.fromDateTime(task.startTime!).format(context)} - ${TimeOfDay.fromDateTime(task.endTime!).format(context)}', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20))
                 : null,
             leading: Checkbox(
               value: task.isCompleted,

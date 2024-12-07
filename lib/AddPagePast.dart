@@ -81,8 +81,8 @@ class AddPagePast extends StatelessWidget {
                     title: Text(task.title, style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20, fontWeight: FontWeight.bold)),
                     subtitle: Text(
                       '${DateFormat('M월 d일').format(task.date)}\n'
-                          '시작: ${TimeOfDay.fromDateTime(task.startTime!).format(context)} - '
-                          '끝: ${TimeOfDay.fromDateTime(task.endTime!).format(context)}',
+                          '${TimeOfDay.fromDateTime(task.startTime!).format(context)} - '
+                          '${TimeOfDay.fromDateTime(task.endTime!).format(context)}',
                         style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20)
                     ),
                     trailing: IconButton(
