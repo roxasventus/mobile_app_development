@@ -29,7 +29,7 @@ class _WeekPageState extends State<WeekPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('habit tracker'),
+        title: const Text('habit tracker', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 35),),
         backgroundColor: Colors.transparent,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -75,7 +75,7 @@ class _WeekPageState extends State<WeekPage> {
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 '날짜: ${_dateString(selectedDate)}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, fontWeight: FontWeight.bold),
               ),
             ),
             const Divider(height: 1, thickness: 1),
@@ -101,14 +101,15 @@ class _WeekPageState extends State<WeekPage> {
                       child: Card(
                         margin: const EdgeInsets.symmetric(vertical: 8.0),
                         child: ListTile(
-                          title: Text(habitList[index]['name']),
+                          title: Text(habitList[index]['name'], style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30)),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
                                 '${streakCounts[habitList[index]['id']] ?? 0}일째',
                                 style: const TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 20,
+                                  fontFamily: '나눔손글씨_미니_손글씨.ttf',
                                   fontWeight: FontWeight.bold,
                                   color: Colors.deepPurple,
                                 ),
@@ -284,15 +285,15 @@ class _WeekPageState extends State<WeekPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('새로운 습관 추가'),
+          title: const Text('새로운 습관 추가', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30, fontWeight: FontWeight.bold),),
           content: TextField(
             controller: habitController,
-            decoration: const InputDecoration(hintText: '습관 이름'),
+            decoration: const InputDecoration(hintText: '습관 이름', hintStyle: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('취소'),
+              child: const Text('취소', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),),
             ),
             TextButton(
               onPressed: () async {
@@ -313,7 +314,7 @@ class _WeekPageState extends State<WeekPage> {
                   Navigator.of(context).pop();
                 }
               },
-              child: const Text('추가'),
+              child: const Text('추가', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),),
             ),
           ],
         );

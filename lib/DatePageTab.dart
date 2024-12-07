@@ -45,7 +45,7 @@ class DatePageTab extends StatelessWidget {
                 const SizedBox(height: 24),
                 Expanded(
                   child: tasks.isEmpty
-                      ? const Center(child: Text('저장한 할 일이 없습니다'))
+                      ? const Center(child: Text('저장한 할 일이 없습니다', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25)))
                       : ListView.builder(
                     itemCount: tasks.length,
                     itemBuilder: (context, index) {
@@ -68,11 +68,11 @@ class DatePageTab extends StatelessWidget {
                             }
                           },
                         ),
-                        title: Text(task.title),
+                        title: Text(task.title, style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20, fontWeight: FontWeight.bold)),
                         subtitle: (task.startTime != null && task.endTime != null)
                             ? Text(
                           '시작: ${TimeOfDay.fromDateTime(task.startTime!).format(context)} - 끝: ${TimeOfDay.fromDateTime(task.endTime!).format(context)}',
-                        )
+                            style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20))
                             : null,
                         trailing: IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),

@@ -87,6 +87,7 @@ flutter:
       - assets/images/background_datepageTab.png
       - assets/fonts/TmonMonsori.ttf.ttf
       - assets/fonts/TmonMonsori.otf.otf
+      - assets/fonts/나눔손글씨_미니_손글씨.ttf
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
@@ -110,6 +111,11 @@ flutter:
     - family: mitMi.ttf.ttf
       fonts:
         - asset: assets/fonts/밑미.ttf
+
+
+    - family: 나눔손글씨_미니_손글씨.ttf
+      fonts:
+        - asset: assets/fonts/나눔손글씨_미니_손글씨.ttf
   # fonts:
   #   - family: Schyler
   #     fonts:

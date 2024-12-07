@@ -49,7 +49,8 @@ class AddPagePast extends StatelessWidget {
             child: Text(
               "지난주 오늘 할일",
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 20,
+                fontFamily: '나눔손글씨_미니_손글씨.ttf',
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
@@ -70,18 +71,19 @@ class AddPagePast extends StatelessWidget {
               }
               final tasks = snapshot.data ?? [];
               if (tasks.isEmpty) {
-                return const Center(child: Text('지난 7일간 기록이 없습니다.'));
+                return const Center(child: Text('지난 7일간 기록이 없습니다.', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30)));
               }
               return ListView.builder(
                 itemCount: tasks.length,
                 itemBuilder: (context, index) {
                   final task = tasks[index];
                   return ListTile(
-                    title: Text(task.title),
+                    title: Text(task.title, style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20, fontWeight: FontWeight.bold)),
                     subtitle: Text(
                       '${DateFormat('M월 d일').format(task.date)}\n'
                           '시작: ${TimeOfDay.fromDateTime(task.startTime!).format(context)} - '
                           '끝: ${TimeOfDay.fromDateTime(task.endTime!).format(context)}',
+                        style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20)
                     ),
                     trailing: IconButton(
                       icon: const Icon(Icons.add, color: Colors.green),

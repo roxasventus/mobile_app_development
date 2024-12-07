@@ -35,51 +35,59 @@ class _AddPageWorkState extends State<AddPageWork> {
         ? const Center(child: CircularProgressIndicator())
         : Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Form(
-        key: _formKey,
-        child: ListView(
-          children: [
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: '할 일 이름',
-                border: OutlineInputBorder(),
+      child: Column(
+        children: [
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                children: [
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: '할 일 이름',
+                      labelStyle: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30),
+                      errorStyle: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      _taskName = value;
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return '할 일 이름을 입력해주세요.';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  // 여기 시간 선택 대신 그리드 표시
+                  // 그리드를 통해 onTimeRangeSelected에서 _startTime과 _endTime 업데이트
+                  AddPageGrid(
+                    onTimeRangeSelected: (start, end) {
+                      setState(() {
+                        _startTime = start;
+                        _endTime = end;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  // 선택된 시간 표시
+                  Text(
+                    _startTime == null || _endTime == null
+                        ? '시간을 선택해주세요 (최소 10분)'
+                        : '시간: ${TimeOfDay.fromDateTime(_startTime!).format(context)} ~ ${TimeOfDay.fromDateTime(_endTime!).format(context)}',
+                      style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _addTask,
+                    child: const Text('할일 추가', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25)),
+                  ),
+                ],
               ),
-              onChanged: (value) {
-                _taskName = value;
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return '할 일 이름을 입력해주세요.';
-                }
-                return null;
-              },
             ),
-            const SizedBox(height: 20),
-            // 여기 시간 선택 대신 그리드 표시
-            // 그리드를 통해 onTimeRangeSelected에서 _startTime과 _endTime 업데이트
-            AddPageGrid(
-              onTimeRangeSelected: (start, end) {
-                setState(() {
-                  _startTime = start;
-                  _endTime = end;
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            // 선택된 시간 표시
-            Text(
-              _startTime == null || _endTime == null
-                  ? '시간을 선택해주세요 (최소 10분)'
-                  : '시간: ${TimeOfDay.fromDateTime(_startTime!).format(context)} ~ ${TimeOfDay.fromDateTime(_endTime!).format(context)}',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _addTask,
-              child: const Text('할일 추가'),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

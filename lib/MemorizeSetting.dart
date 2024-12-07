@@ -93,11 +93,11 @@ class _MemorizeSettingState extends State<MemorizeSetting> {
     final List<DropdownMenuItem<MemorizeLanguage>> languageItems = [
       DropdownMenuItem(
         value: MemorizeLanguage.english,
-        child: const Text('영어 단어', style: TextStyle(fontSize: 18, color: Colors.black)),
+        child: const Text('영어 단어', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),),
       ),
       DropdownMenuItem(
         value: MemorizeLanguage.japanese,
-        child: const Text('일본어 단어', style: TextStyle(fontSize: 18, color: Colors.black)),
+        child: const Text('일본어 단어', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),),
       ),
     ];
 
@@ -124,7 +124,7 @@ class _MemorizeSettingState extends State<MemorizeSetting> {
           children: [
             const Text(
               '암기할 언어를 선택하세요:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+              style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             Container(
@@ -161,7 +161,7 @@ class _MemorizeSettingState extends State<MemorizeSetting> {
                 height: 24,
                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
               )
-                  : const Text('확인', style: TextStyle(fontSize: 18, color: Colors.white)),
+                  : const Text('확인', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25, color: Colors.white),),
             ),
             const SizedBox(height: 20),
             // MemorizeView 컨테이너 크기 조정

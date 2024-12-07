@@ -74,12 +74,12 @@ class TodayPageGrid extends StatelessWidget {
               children: [
                 const SizedBox(
                   height: 30,
-                  child: Center(child: Text('시간')),
+                  child: Center(child: Text('시간', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20))),
                 ),
                 for (var m in minutes)
                   SizedBox(
                     height: 30,
-                    child: Center(child: Text('$m분')),
+                    child: Center(child: Text('$m분', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20))),
                   ),
               ],
             ),
@@ -89,7 +89,7 @@ class TodayPageGrid extends StatelessWidget {
                 children: [
                   SizedBox(
                     height: 30,
-                    child: Center(child: Text('${hours[row]}시')),
+                    child: Center(child: Text('${hours[row]}시', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20))),
                   ),
                   for (int col = 0; col < minutes.length; col++)
                     Builder(

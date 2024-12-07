@@ -57,14 +57,14 @@ class _LoginFormState extends State<LoginForm> {
                 child: Image.asset('assets/images/StackedBook.png', fit: BoxFit.contain),
               ),
               Text(
-                '어플 이름',
+                'TASKLYFE',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 40, color: Colors.white),
               ),
               Text(
-                '여기에 어플 설명을 한 줄',
+                '당신의 일정과 목표를 체계적으로 관리하는 스마트 플래너',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 20, color: Colors.white),
+                style: TextStyle(fontFamily: 'TmonMonsori.ttf.ttf', fontSize: 15, color: Colors.white),
               ),
               SizedBox(height: 20),
               TextFormField(

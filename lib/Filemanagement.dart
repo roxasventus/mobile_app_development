@@ -82,11 +82,12 @@ class _FileManagementState extends State<FileManagement> {
     final tag = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('tag 입력'),
+        title: const Text('tag 입력', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 30, fontWeight: FontWeight.bold),),
         content: TextField(
           controller: tagController,
           decoration: const InputDecoration(
-              hintText: 'tag 입력 (미지정 시 임시태그)'
+              hintText: 'tag 입력 (미지정 시 임시태그)',
+              hintStyle: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),
           ),
         ),
         actions: [
@@ -94,14 +95,14 @@ class _FileManagementState extends State<FileManagement> {
             onPressed: () {
               Navigator.pop(context, '');
             },
-            child: const Text('취소'),
+            child: const Text('취소', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),),
           ),
           TextButton(
             onPressed: () {
               final input = tagController.text.trim();
               Navigator.pop(context, input);
             },
-            child: const Text('확인'),
+            child: const Text('확인', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),),
           ),
         ],
       ),
@@ -200,7 +201,7 @@ class _FileManagementState extends State<FileManagement> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("자료 관리"),
+        title: const Text("공부 자료 관리", style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 35),),
         backgroundColor: Colors.transparent,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -236,7 +237,7 @@ class _FileManagementState extends State<FileManagement> {
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 children: [
-                  const Text('태그 필터: ', style: TextStyle(fontSize: 16)),
+                  const Text('태그 필터: ', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),),
                   Expanded(
                     child: DropdownButton<String>(
                       isExpanded: true,
@@ -244,7 +245,7 @@ class _FileManagementState extends State<FileManagement> {
                       items: _allTags.map((tag) {
                         return DropdownMenuItem<String>(
                           value: tag,
-                          child: Text(tag),
+                          child: Text(tag, style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),),
                         );
                       }).toList(),
                       onChanged: (value) {
@@ -270,14 +271,14 @@ class _FileManagementState extends State<FileManagement> {
                   final file = _filteredMetadata[index];
                   final tag = file['tags'] as String;
                   return ListTile(
-                    title: Text(file['name']),
+                    title: Text(file['name'], style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20, fontWeight: FontWeight.bold),),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Path: ${file['path']}'),
+                        Text('Path: ${file['path']}', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 15),),
                         Padding(
                           padding: const EdgeInsets.only(top: 4.0),
-                          child: Chip(label: Text(tag)),
+                          child: Chip(label: Text(tag, style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 15, fontWeight: FontWeight.bold),)),
                         ),
                       ],
                     ),

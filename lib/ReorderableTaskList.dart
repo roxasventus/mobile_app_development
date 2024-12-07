@@ -26,10 +26,10 @@ class ReorderableTaskList extends StatelessWidget {
           key: ValueKey(task.id),
           background: Container(color: Colors.red), // 삭제 시 배경 색상
           child: ListTile(
-            title: Text(task.title),
+            title: Text(task.title, style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20, fontWeight: FontWeight.bold)),
             subtitle: task.startTime != null && task.endTime != null
                 ? Text(
-                'Start: ${TimeOfDay.fromDateTime(task.startTime!).format(context)} - End: ${TimeOfDay.fromDateTime(task.endTime!).format(context)}')
+                'Start: ${TimeOfDay.fromDateTime(task.startTime!).format(context)} - End: ${TimeOfDay.fromDateTime(task.endTime!).format(context)}', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20))
                 : null,
             leading: Checkbox(
               value: task.isCompleted,

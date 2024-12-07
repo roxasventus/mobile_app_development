@@ -26,7 +26,7 @@ class AddPage extends StatelessWidget {
               ),
             ),
           ),
-          title: Text(formattedDate),
+          title: Text(formattedDate, style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 35)),
           leading: Builder(
             builder: (context) {
               return IconButton(
@@ -52,6 +52,7 @@ class AddPage extends StatelessWidget {
           child: Column(
             children: [
               const TabBar(
+                labelStyle: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25),
                 tabs: [
                   Tab(text: '할 일'),
                   Tab(text: '미완성'),

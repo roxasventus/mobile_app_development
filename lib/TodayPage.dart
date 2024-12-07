@@ -34,7 +34,7 @@ class TodayPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('$formattedDate의 할일'),
+        title: Text('$formattedDate의 할일', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 35)),
         backgroundColor: Colors.transparent,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -87,7 +87,7 @@ class TodayPage extends StatelessWidget {
 
                   final tasks = snapshot.data ?? [];
                   if (tasks.isEmpty) {
-                    return const Center(child: Text('할 일이 없습니다.'));
+                    return const Center(child: Text('할 일이 없습니다.', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25)));
                   }
 
                   return ReorderableTaskList(
