@@ -35,12 +35,26 @@ class _AddPageGridState extends State<AddPageGrid> {
               children: [
                 const SizedBox(
                   height: 30,
-                  child: Center(child: Text('시간', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20))),
+                  child: Center(
+                    child: Text(
+                      '시간',
+                      style: TextStyle(
+                          fontFamily: '나눔손글씨_미니_손글씨.ttf',
+                          fontSize: 20),
+                    ),
+                  ),
                 ),
                 for (var m in minutes)
                   SizedBox(
                     height: 30,
-                    child: Center(child: Text('$m분', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20))),
+                    child: Center(
+                      child: Text(
+                        '$m분',
+                        style: TextStyle(
+                            fontFamily: '나눔손글씨_미니_손글씨.ttf',
+                            fontSize: 20),
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -50,7 +64,14 @@ class _AddPageGridState extends State<AddPageGrid> {
                 children: [
                   SizedBox(
                     height: 30,
-                    child: Center(child: Text('${hours[r]}시', style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20))),
+                    child: Center(
+                      child: Text(
+                        '${hours[r]}시',
+                        style: TextStyle(
+                            fontFamily: '나눔손글씨_미니_손글씨.ttf',
+                            fontSize: 20),
+                      ),
+                    ),
                   ),
                   for (int c = 0; c < minutes.length; c++)
                     GestureDetector(
@@ -59,7 +80,8 @@ class _AddPageGridState extends State<AddPageGrid> {
                       },
                       child: Container(
                         height: 30,
-                        color: _isCellSelected(r, c) ? Colors.blue.shade200 : Colors.white,
+                        color:
+                        _isCellSelected(r, c) ? Colors.blue.shade200 : Colors.white,
                       ),
                     ),
                 ],
@@ -92,7 +114,7 @@ class _AddPageGridState extends State<AddPageGrid> {
         // 종료 시간 선택
         if (cellTime.isBefore(startTime!)) {
           // 종료 시간이 시작 시간보다 이전이면 swap
-          final temp = startTime;
+          final temp = startTime!;
           startTime = cellTime;
           endTime = temp;
         } else {
@@ -103,8 +125,13 @@ class _AddPageGridState extends State<AddPageGrid> {
         selectedCells.clear();
         _highlightRange();
 
-        // 시간 범위 선택 완료 => 콜백 호출
-        widget.onTimeRangeSelected?.call(startTime!, endTime!);
+        // 시간 범위 선택 완료 => 콜백 호출 (endTime에 10분 추가)
+        if (startTime != null && endTime != null) {
+          widget.onTimeRangeSelected?.call(
+            startTime!,
+            endTime!.add(const Duration(minutes: 10)),
+          );
+        }
       } else {
         // 이미 start, end가 있다면 다시 start를 새로 지정
         startTime = cellTime;
