@@ -23,6 +23,24 @@ class _WeekPageState extends State<WeekPage> {
   void initState() {
     super.initState();
     _fetchHabits();
+
+    // 로그인/로그아웃 상태 변화 감지
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      print('authStateChanges: user = $user');
+      if (user != null) {
+        // 로그인 되면 습관 목록 재불러오기
+        print('Re-fetching habits for user: ${user.uid}');
+        _fetchHabits();
+      } else {
+        // 로그아웃 시 리스트 초기화
+        print('User is null, clearing habit lists.');
+        setState(() {
+          habitList.clear();
+          streakCounts.clear();
+          completionStatus.clear();
+        });
+      }
+    });
   }
 
   @override
@@ -75,7 +93,11 @@ class _WeekPageState extends State<WeekPage> {
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 '날짜: ${_dateString(selectedDate)}',
-                  style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontFamily: '나눔손글씨_미니_손글씨.ttf',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const Divider(height: 1, thickness: 1),
@@ -101,7 +123,13 @@ class _WeekPageState extends State<WeekPage> {
                       child: Card(
                         margin: const EdgeInsets.symmetric(vertical: 8.0),
                         child: ListTile(
-                          title: Text(habitList[index]['name'], style: TextStyle(fontFamily: '나눔손글씨_미니_손글씨.ttf', fontSize: 25)),
+                          title: Text(
+                            habitList[index]['name'],
+                            style: const TextStyle(
+                              fontFamily: '나눔손글씨_미니_손글씨.ttf',
+                              fontSize: 25,
+                            ),
+                          ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -145,27 +173,36 @@ class _WeekPageState extends State<WeekPage> {
 
   Future<void> _fetchHabits() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      print('No user logged in, skipping fetch.');
+      return;
+    }
 
+    print('Fetching habits for user: ${user.uid}');
     final snapshot = await FirebaseFirestore.instance
         .collection('habits')
         .where('userId', isEqualTo: user.uid)
         .orderBy('order')
         .get();
 
+    print('Fetched ${snapshot.docs.length} habits.');
     setState(() {
       habitList = snapshot.docs
           .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
           .toList();
     });
 
+    print('habitList length after fetch: ${habitList.length}');
     _fetchCompletionStatus(selectedDate);
     _fetchStreakCounts();
   }
 
   Future<void> _fetchCompletionStatus(DateTime date) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      print('No user logged in for _fetchCompletionStatus.');
+      return;
+    }
 
     final snapshot = await FirebaseFirestore.instance
         .collection('completion')
@@ -173,6 +210,7 @@ class _WeekPageState extends State<WeekPage> {
         .where('date', isEqualTo: _dateString(date))
         .get();
 
+    print('_fetchCompletionStatus for ${_dateString(date)}: ${snapshot.docs.length} docs.');
     final Map<String, bool> status = {};
     for (var doc in snapshot.docs) {
       status[doc['habitId']] = doc['isDone'] ?? false;
@@ -185,8 +223,12 @@ class _WeekPageState extends State<WeekPage> {
 
   Future<void> _fetchStreakCounts() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      print('No user logged in for _fetchStreakCounts.');
+      return;
+    }
 
+    print('Calculating streaks...');
     final Map<String, int> streakMap = {};
 
     for (var habit in habitList) {
@@ -217,13 +259,18 @@ class _WeekPageState extends State<WeekPage> {
     setState(() {
       streakCounts = streakMap;
     });
+    print('Streak counts updated.');
   }
 
   Future<void> _updateCompletionStatus(String habitId, DateTime date, bool isDone) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      print('No user logged in, cannot update completion status.');
+      return;
+    }
 
     final docId = '${habitId}_${_dateString(date)}';
+    print('Updating completion status for $docId to $isDone');
 
     try {
       await FirebaseFirestore.instance.collection('completion').doc(docId).set({
@@ -235,9 +282,12 @@ class _WeekPageState extends State<WeekPage> {
 
       setState(() {
         completionStatus[habitId] = isDone;
-        _fetchStreakCounts();
       });
+
+      // 스탯 업데이트
+      _fetchStreakCounts();
     } catch (e) {
+      print('Status update failed: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('상태 업데이트 실패: $e')),
       );
@@ -245,6 +295,7 @@ class _WeekPageState extends State<WeekPage> {
   }
 
   Future<void> _deleteHabit(String habitId) async {
+    print('Deleting habit: $habitId');
     await FirebaseFirestore.instance.collection('habits').doc(habitId).delete();
     await FirebaseFirestore.instance
         .collection('completion')
@@ -265,6 +316,7 @@ class _WeekPageState extends State<WeekPage> {
 
     setState(() {});
 
+    print('Reordering habits in Firestore...');
     await _updateOrderInFirestore();
   }
 
@@ -276,6 +328,7 @@ class _WeekPageState extends State<WeekPage> {
           .doc(habit['id'])
           .update({'order': i});
     }
+    print('Order updated in Firestore.');
   }
 
   Future<void> _addNewHabit(BuildContext context) async {
@@ -310,6 +363,7 @@ class _WeekPageState extends State<WeekPage> {
                     setState(() {
                       habitList.add({'id': newHabit.id, 'name': habitName, 'order': habitList.length});
                     });
+                    print('Added new habit: $habitName for user ${user.uid}');
                   }
                   Navigator.of(context).pop();
                 }
